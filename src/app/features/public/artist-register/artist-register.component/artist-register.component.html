@@ -1,15 +1,15 @@
-<div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-4xl mx-auto w-full space-y-8">
     
     <!-- Encabezado -->
-    <div class="text-center space-y-3">
-      <span class="px-3 py-1 text-xs font-semibold tracking-wider text-indigo-400 bg-indigo-950/80 rounded-full border border-indigo-800/50 uppercase">
+    <div class="text-center space-y-2">
+      <span class="text-xs font-bold tracking-widest text-rose-500 uppercase">
         Convocatoria Abierta
       </span>
-      <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
-        Suma tu Arte a Yuca
+      <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+        Formulario de Prerregistro
       </h1>
-      <p class="text-slate-400 text-base sm:text-lg max-w-xl mx-auto">
+      <p class="text-slate-500 text-sm sm:text-base">
         Registra tu perfil de artista para postularte a los eventos y reservar tu stand.
       </p>
     </div>
@@ -17,14 +17,19 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
       <!-- Formulario -->
-      <div class="lg:col-span-7 bg-slate-900/80 backdrop-blur border border-slate-800 p-6 sm:p-8 rounded-2xl shadow-2xl space-y-6">
+      <div class="lg:col-span-7 bg-white border border-rose-100 p-6 sm:p-8 rounded-3xl shadow-xl shadow-rose-500/5 space-y-6">
         
         <!-- Mensajes de estado -->
-        <div *ngIf="successMessage" class="p-4 bg-emerald-950/60 border border-emerald-500/50 rounded-xl text-emerald-300 text-sm">
-          ¡Solicitud enviada con éxito! Tu perfil se encuentra en estado <strong>EN_REVISION</strong>.
+        <div *ngIf="successMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm space-y-3">
+          <div>¡Solicitud enviada con éxito! Tu perfil se encuentra en estado <strong>EN_REVISION</strong>.</div>
+          <div>
+            <a [href]="getWhatsAppPostulacionLink()" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition shadow-sm">
+              <span>💬</span> Notificar por WhatsApp
+            </a>
+          </div>
         </div>
 
-        <div *ngIf="errorMessage" class="p-4 bg-rose-950/60 border border-rose-500/50 rounded-xl text-rose-300 text-sm">
+        <div *ngIf="errorMessage" class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm">
           {{ errorMessage }}
         </div>
 
@@ -32,44 +37,44 @@
           
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Nombre Real</label>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Nombre Real *</label>
               <input
                 type="text"
                 formControlName="nombreReal"
-                placeholder="Ej. Adriana Troncoso"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+                placeholder="Ej. Juan Pérez"
+                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Celular / WhatsApp</label>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Celular / WhatsApp *</label>
               <input
                 type="text"
                 formControlName="celular"
-                placeholder="Ej. 7274931"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+                placeholder="Ej. 71234567"
+                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
               />
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Nombre Comercial / Artístico</label>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Nombre Comercial *</label>
               <input
                 type="text"
                 formControlName="nombreComercial"
-                placeholder="Ej. Adi.ct_"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+                placeholder="Ej. ArtStudio"
+                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Categoría</label>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Categoría *</label>
               <select
                 formControlName="categoria"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
               >
-                <option value="" disabled selected>Selecciona una categoría</option>
+                <option value="" disabled selected class="text-slate-400">Selecciona una categoría</option>
                 <option *ngFor="let cat of categories" [value]="cat.value">
                   {{ cat.label }}
                 </option>
@@ -78,80 +83,80 @@
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Usuario de Instagram</label>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Usuario de Instagram *</label>
             <input
               type="text"
               formControlName="instagram"
-              placeholder="@Adi.ct_"
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+              placeholder="@artstudio.bo"
+              class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
             />
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Descripción / Biografía (Opcional)</label>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Descripción / Biografía (Opcional)</label>
             <textarea
               formControlName="descripcion"
               rows="3"
-              placeholder="Hola, soy una ilustradora..."
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 transition resize-none"
+              placeholder="Ej. Ilustrador digital y creador de stickers..."
+              class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl p-4 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm resize-none"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1">Portafolio / Enlace (Opcional)</label>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Portafolio URL (Opcional)</label>
             <input
               type="url"
               formControlName="portafolioUrl"
-              placeholder="https://drive.google.com/..."
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+              placeholder="Ej. https://behance.net/tu_portafolio"
+              class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
             />
           </div>
 
           <button
             type="submit"
             [disabled]="isSubmitting"
-            class="w-full bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg transition duration-300 disabled:opacity-50"
+            class="w-full bg-rose-400 hover:bg-rose-500 text-white font-bold py-4 px-6 rounded-2xl shadow-md shadow-rose-400/20 transition duration-300 disabled:opacity-50 cursor-pointer text-sm tracking-wide"
           >
-            {{ isSubmitting ? 'Enviando...' : 'Registrar Perfil' }}
+            {{ isSubmitting ? 'Enviando...' : 'Registrar Perfil y Solicitar Stand' }}
           </button>
         </form>
       </div>
 
       <!-- Vista previa -->
       <div class="lg:col-span-5 space-y-4 sticky top-6">
-        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vista previa de tu tarjeta</h3>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vista previa de tu tarjeta</h3>
         
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 relative overflow-hidden">
+        <div class="bg-white border border-rose-100 rounded-3xl p-6 shadow-xl shadow-rose-500/5 space-y-4 relative overflow-hidden">
           <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center font-bold text-xl text-white shadow-md">
+            <div class="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center font-black text-xl text-rose-500 shadow-sm">
               {{ (profileForm.get('nombreComercial')?.value || 'A').charAt(0) | uppercase }}
             </div>
             <div>
-              <h4 class="font-bold text-lg text-slate-100">
+              <h4 class="font-bold text-lg text-slate-900">
                 {{ profileForm.get('nombreComercial')?.value || 'Nombre Comercial' }}
               </h4>
-              <span class="text-xs text-indigo-400 font-medium">
+              <span class="text-xs font-semibold text-rose-500">
                 {{ profileForm.get('categoria')?.value || 'Categoría' }}
               </span>
             </div>
           </div>
 
-          <p class="text-xs text-slate-400 leading-relaxed min-h-[50px]">
+          <p class="text-xs text-slate-500 leading-relaxed min-h-[50px]">
             {{ profileForm.get('descripcion')?.value || 'Aquí se mostrará tu biografía o resumen de arte...' }}
           </p>
 
-          <div class="space-y-1 text-xs text-slate-400 border-t border-slate-800 pt-3">
+          <div class="space-y-1 text-xs text-slate-600 border-t border-slate-100 pt-3">
             <p *ngIf="profileForm.get('instagram')?.value">
-              <span class="text-slate-500">Instagram:</span> {{ profileForm.get('instagram')?.value }}
+              <span class="text-slate-400">Instagram:</span> {{ profileForm.get('instagram')?.value }}
             </p>
             <p *ngIf="profileForm.get('celular')?.value">
-              <span class="text-slate-500">Contacto:</span> {{ profileForm.get('celular')?.value }}
+              <span class="text-slate-400">Contacto:</span> {{ profileForm.get('celular')?.value }}
             </p>
           </div>
 
-          <div class="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/80">
+          <div class="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
             <span>Estado:</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium border border-amber-500/20">
+            <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 font-bold border border-amber-200">
               EN_REVISION
             </span>
           </div>
