@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface LoginDto {
   email: string;
@@ -17,7 +18,7 @@ export interface AuthResponse {
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/auth'; // Reemplaza por la URL de tu backend en NestJS
+  private readonly apiUrl = `${environment.apiUrl}/auth`; // Reemplaza por la URL de tu backend en NestJS
   private readonly TOKEN_KEY = 'yuca_access_token';
 
   login(credentials: LoginDto): Observable<AuthResponse> {
