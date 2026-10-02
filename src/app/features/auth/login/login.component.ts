@@ -26,7 +26,8 @@ export class LoginComponent {
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
-        this.router.navigate(['/admin']);
+        // Asegúrate de que apunte a tu ruta de postulaciones del admin:
+        this.router.navigate(['/admin/postulaciones']);
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Credenciales incorrectas';

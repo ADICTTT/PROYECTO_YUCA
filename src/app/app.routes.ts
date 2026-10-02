@@ -6,6 +6,13 @@ import { ArtistRegisterComponent } from './features/public/artist-register/artis
 export const routes: Routes = [
   { path: 'registro-artista', component: ArtistRegisterComponent },
   { path: 'login', component: LoginComponent },
-  { path: '', redirectTo: 'registro-artista', pathMatch: 'full' },
-  { path: '**', redirectTo: 'registro-artista' },
+  
+  {
+    path: 'admin/postulaciones',
+    loadComponent: () => import('./dashboard/dashboard-main/dashboard-main.component').then(m => m.DashboardMainComponent),
+    canActivate: [authGuard]
+  },
+
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'login' }
 ];

@@ -2,10 +2,6 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreatePerfileDto, ProfileService } from '@core/services/profile.service';
-// Si tu tsconfig tiene configurado el path alias '@core', puedes usar:
-// import { ProfileService, CreatePerfileDto } from '@core/services/profile.service';
-
-// De lo contrario, usamos la ruta relativa corregida (4 niveles hacia arriba):
 
 @Component({
   selector: 'app-artist-register',
@@ -20,6 +16,7 @@ export class ArtistRegisterComponent {
   isSubmitting = false;
   successMessage = false;
   errorMessage = '';
+  instagramEnviado = ''; // <--- Variable para conservar el Instagram registrado
 
   categories = [
     { label: 'Ilustradores', value: 'ILUSTRADORES' },
@@ -48,6 +45,9 @@ export class ArtistRegisterComponent {
 
     const val = this.profileForm.value;
 
+    // Guardamos el Instagram ingresado antes de limpiar el formulario
+    this.instagramEnviado = val.instagram;
+
     const payload: CreatePerfileDto = {
       nombreReal: val.nombreReal,
       celular: val.celular,
@@ -73,7 +73,7 @@ export class ArtistRegisterComponent {
         this.successMessage = true;
         this.profileForm.reset();
       },
-      error: (err: any) => { // <--- Tipado explícito para evitar TS7006
+      error: (err: any) => {
         this.isSubmitting = false;
         if (Array.isArray(err.error?.message)) {
           this.errorMessage = err.error.message.join(', ');
@@ -82,5 +82,13 @@ export class ArtistRegisterComponent {
         }
       },
     });
+  }
+
+  getWhatsAppPostulacionLink(): string {
+    // Usamos la variable guardada para que mantenga el Instagram que escribió el usuario
+    const instagramUser = this.instagramEnviado || '@artista';
+    const numeroOrganizador = '60423998'; 
+    const mensaje = `Hola, soy ${instagramUser}, ya realicé mi postulación para la adquisición de un stand en la feria`;
+    return `https://wa.me/${numeroOrganizador}?text=${encodeURIComponent(mensaje)}`;
   }
 }
