@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface CreatePerfileDto {
   nombreReal: string;
@@ -33,11 +34,11 @@ export interface Perfil {
 export class ProfileService {
   private readonly http = inject(HttpClient);
 
-  // URL base para los endpoints generales de perfiles
-  private readonly baseUrl = 'http://localhost:3000/perfiles';
+  // URL base usando el environment (cambiará solo entre local y producción)
+  private readonly baseUrl = `${environment.apiUrl}/perfiles`;
   
-  // URL específica que ya usas para el registro público
-  private readonly apiUrl = 'http://localhost:3000/perfiles/publico/registro';
+  // URL específica para el registro público
+  private readonly apiUrl = `${environment.apiUrl}/perfiles/publico/registro`;
 
   // --- MÉTODO EXISTENTE (FUNCIONANDO) ---
   registerProfile(perfilData: CreatePerfileDto): Observable<any> {
