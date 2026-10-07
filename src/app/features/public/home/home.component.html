@@ -1,0 +1,287 @@
+<div class="pb-16 space-y-16">
+
+  <!-- ============ 1. BIENVENIDA + CARRUSEL ============ -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    <div class="bg-[#FFF9E6] border-2 border-[#2C221E]/15 rounded-[2rem] p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Bienvenida -->
+      <div class="lg:col-span-4 bg-[#FFFDF5] border-2 border-[#2C221E]/15 rounded-3xl p-6 sm:p-8 flex flex-col justify-center gap-5">
+        <span class="self-start text-xs font-black uppercase tracking-wider text-[#E85A4F] bg-[#E85A4F]/10 px-3 py-1 rounded-full border border-[#E85A4F]/20">
+          Comunidad de Expositores
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-black text-[#2C221E] tracking-tight leading-tight">
+          Bienvenido a Proyecto Yuca
+        </h1>
+        <p class="text-sm font-semibold text-[#5C5046]">
+          La plataforma oficial para registrar tu perfil de expositor y reservar tu mesa.
+        </p>
+        <a
+          [href]="evento.whatsappCanal"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center justify-center gap-2 bg-[#7B8E3D] hover:bg-[#687833] text-white font-bold text-xs py-3.5 px-6 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
+        >
+          <i class="fa-solid fa-bullhorn text-sm"></i>
+          <span>Seguir canal de Proyecto Yuca</span>
+        </a>
+      </div>
+
+      <!-- Carrusel -->
+      <div
+        class="lg:col-span-8 relative bg-[#2C221E] text-white rounded-3xl border-4 border-[#2C221E] shadow-2xl overflow-hidden min-h-[420px] flex items-center"
+        role="region"
+        aria-roledescription="carrusel"
+        aria-label="Novedades de Proyecto Yuca"
+        (mouseenter)="detenerAuto()"
+        (mouseleave)="iniciarAuto()"
+        (focusin)="detenerAuto()"
+        (focusout)="iniciarAuto()"
+      >
+        <div
+          class="w-full px-16 py-14 sm:px-20 flex flex-col md:flex-row items-center justify-between gap-8"
+          aria-live="polite"
+        >
+          <div class="space-y-4 max-w-xl">
+            <span class="inline-block bg-[#F4C453] text-[#2C221E] font-black text-xs uppercase px-4 py-1.5 rounded-full border border-[#2C221E]">
+              {{ slide().tag }}
+            </span>
+
+            <h2 class="text-4xl sm:text-5xl font-black text-[#F4C453] leading-none tracking-tight">
+              {{ slide().titulo }}
+            </h2>
+
+            <p class="text-sm sm:text-base font-medium text-[#FFFDF5]/90">
+              {{ slide().subtitulo }}
+            </p>
+
+            <div class="pt-2 flex flex-wrap gap-3">
+              @for (accion of slide().acciones; track accion.texto) {
+                @if (accion.url) {
+                  <a [href]="accion.url" target="_blank" rel="noopener" [class]="claseAccion[accion.estilo]">
+                    <i [class]="accion.icono"></i>
+                    <span>{{ accion.texto }}</span>
+                  </a>
+                } @else {
+                  <a [routerLink]="accion.ruta" [class]="claseAccion[accion.estilo]">
+                    <i [class]="accion.icono"></i>
+                    <span>{{ accion.texto }}</span>
+                  </a>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Afiche o ilustración del slide -->
+          <div class="w-full max-w-[15rem] md:w-60 shrink-0 aspect-[4/5] rounded-2xl border-4 border-white/20 overflow-hidden shadow-lg">
+            @if (slide().imagen) {
+              <img
+                [src]="slide().imagen"
+                [alt]="'Afiche de ' + slide().titulo"
+                class="w-full h-full object-cover"
+              />
+            } @else {
+              <div
+                [class]="'w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center font-black text-white ' + slide().fondo"
+              >
+                <i [class]="slide().icono + ' text-5xl text-[#F4C453]'"></i>
+                <span class="text-xl tracking-wider">{{ slide().etiqueta }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Flechas -->
+        <button
+          type="button"
+          (click)="anterior()"
+          aria-label="Anterior"
+          class="absolute left-4 z-20 w-11 h-11 bg-white/20 hover:bg-white text-white hover:text-[#2C221E] rounded-full border-2 border-white/40 flex items-center justify-center transition cursor-pointer"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button
+          type="button"
+          (click)="siguiente()"
+          aria-label="Siguiente"
+          class="absolute right-4 z-20 w-11 h-11 bg-white/20 hover:bg-white text-white hover:text-[#2C221E] rounded-full border-2 border-white/40 flex items-center justify-center transition cursor-pointer"
+        >
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <!-- Puntos -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          @for (s of slides; track s.titulo; let i = $index) {
+            <button
+              type="button"
+              (click)="irA(i)"
+              [attr.aria-label]="'Ir al slide ' + (i + 1)"
+              [class]="'h-2.5 rounded-full transition-all cursor-pointer ' + (indice() === i ? 'w-8 bg-[#F4C453]' : 'w-2.5 bg-white/40')"
+            ></button>
+          }
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============ 2. PRÓXIMO EVENTO ============ -->
+  <section id="proximo-evento" class="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+    <div class="max-w-2xl space-y-2">
+      <span class="text-xs font-black uppercase tracking-widest text-[#E85A4F]">Próximo evento</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-[#2C221E]">{{ evento.nombre }}</h2>
+      <p class="text-sm sm:text-base font-semibold text-[#5C5046]">{{ evento.descripcion }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] space-y-2">
+        <i class="fa-solid fa-calendar-days text-xl text-[#E85A4F]"></i>
+        <p class="text-[11px] font-black uppercase tracking-wide text-[#5C5046]">Fecha</p>
+        <p class="text-lg font-black text-[#2C221E]">{{ evento.fechaTexto }}</p>
+      </div>
+      <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] space-y-2">
+        <i class="fa-solid fa-location-dot text-xl text-[#E85A4F]"></i>
+        <p class="text-[11px] font-black uppercase tracking-wide text-[#5C5046]">Lugar</p>
+        <p class="text-lg font-black text-[#2C221E]">{{ evento.ubicacion }}</p>
+      </div>
+      <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] space-y-2">
+        <i class="fa-solid fa-hourglass-half text-xl text-[#E85A4F]"></i>
+        <p class="text-[11px] font-black uppercase tracking-wide text-[#5C5046]">Revisión de perfil</p>
+        <p class="text-lg font-black text-[#2C221E]">Hasta 24 horas</p>
+      </div>
+      <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] space-y-2">
+        <i class="fa-solid fa-money-bill-wave text-xl text-[#E85A4F]"></i>
+        <p class="text-[11px] font-black uppercase tracking-wide text-[#5C5046]">Pago de mesa</p>
+        <p class="text-lg font-black text-[#2C221E]">24 h tras elegirla</p>
+      </div>
+    </div>
+
+    <!-- Categorías -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      @for (cat of categorias; track cat.nombre) {
+        <div class="bg-[#FFF9E6] border-2 border-[#2C221E]/15 rounded-3xl p-6 flex items-start gap-4">
+          <span class="w-12 h-12 shrink-0 grid place-items-center bg-[#F4C453] text-[#2C221E] rounded-2xl border-2 border-[#2C221E]">
+            <i [class]="cat.icono"></i>
+          </span>
+          <div>
+            <h3 class="text-lg font-black text-[#2C221E]">{{ cat.nombre }}</h3>
+            <p class="text-xs font-semibold text-[#5C5046] mt-1">{{ cat.texto }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+
+  <!-- ============ 3. CÓMO PARTICIPAR ============ -->
+  <section id="como-participar" class="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+    <div class="text-center max-w-2xl mx-auto space-y-2">
+      <span class="text-xs font-black uppercase tracking-widest text-[#E85A4F]">Paso a paso</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-[#2C221E]">Cómo participar</h2>
+      <p class="text-xs sm:text-sm font-semibold text-[#5C5046]">
+        Tu perfil queda guardado para que puedas usarlo en futuras ediciones.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (paso of pasos; track paso.titulo; let i = $index) {
+        <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl p-6 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="w-10 h-10 grid place-items-center bg-[#E85A4F] text-white font-black rounded-full border-2 border-[#2C221E]">
+              {{ i + 1 }}
+            </span>
+            <i [class]="paso.icono + ' text-2xl text-[#7B8E3D]'"></i>
+          </div>
+          <h3 class="text-xl font-black text-[#2C221E]">{{ paso.titulo }}</h3>
+          <p class="text-sm font-medium text-[#5C5046] leading-relaxed">{{ paso.texto }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Aviso de pago -->
+    <div class="bg-[#F4C453]/30 border-2 border-[#2C221E] rounded-2xl p-5 flex items-start gap-3">
+      <i class="fa-solid fa-triangle-exclamation text-xl text-[#E85A4F] mt-0.5"></i>
+      <p class="text-sm font-bold text-[#2C221E] leading-relaxed">
+        Una vez seleccionada la mesa, tendrás 24 horas para realizar el pago. Si el pago no se realiza
+        dentro de ese plazo, la organización podrá liberar la mesa y ponerla nuevamente disponible.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-4">
+      <a
+        routerLink="/registro-artista"
+        class="inline-flex items-center gap-2 bg-[#E85A4F] hover:bg-[#d4473c] text-white font-black text-sm py-4 px-8 rounded-2xl border-2 border-[#2C221E] shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
+      >
+        <i class="fa-solid fa-pen-nib"></i>
+        <span>Crear mi perfil</span>
+      </a>
+      <a
+        [href]="evento.whatsappCanal"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 bg-[#7B8E3D] hover:bg-[#687833] text-white font-black text-sm py-4 px-8 rounded-2xl border-2 border-[#2C221E] shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
+      >
+        <i class="fa-solid fa-bullhorn"></i>
+        <span>Seguir canal de Proyecto Yuca</span>
+      </a>
+    </div>
+  </section>
+
+
+  <!-- ============ 4. EDICIONES PASADAS ============ -->
+  <section id="ediciones" class="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+    <div class="text-center max-w-2xl mx-auto space-y-2">
+      <span class="text-xs font-black uppercase tracking-widest text-[#E85A4F]">Nuestra Trayectoria</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-[#2C221E]">Ediciones Pasadas &amp; Experiencias</h2>
+      <p class="text-xs sm:text-sm font-semibold text-[#5C5046]">
+        Mira cómo han vivido nuestros expositores e ilustradores las versiones anteriores de Proyecto Yuca.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+      @for (e of eventosPasados; track e.titulo) {
+        <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+
+          <div [class]="'h-44 border-b-[3px] border-[#2C221E] p-4 flex flex-col justify-between ' + e.imagenBg">
+            <div class="flex justify-between items-center">
+              <span class="bg-[#2C221E] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                {{ e.asistentes }}
+              </span>
+              <span class="bg-white text-[#2C221E] text-[10px] font-black px-2.5 py-1 rounded-lg border border-[#2C221E]">
+                {{ e.expositores }}
+              </span>
+            </div>
+            <div class="text-white font-black text-xl drop-shadow-md flex items-center gap-2">
+              <i class="fa-solid fa-camera"></i>
+              <span>{{ e.titulo }}</span>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-4 flex-grow flex flex-col justify-between">
+            <div>
+              <span class="text-[11px] font-bold text-[#E85A4F] uppercase block mb-1">{{ e.fecha }}</span>
+              <h3 class="text-xl font-black text-[#2C221E] mb-3">{{ e.titulo }}</h3>
+              <div class="bg-[#FFF9E6] p-3.5 rounded-2xl border border-[#2C221E]/15 text-xs font-medium text-[#5C5046] italic leading-relaxed">
+                <i class="fa-solid fa-quote-left text-[#E85A4F] mr-1"></i>
+                {{ e.resena }}
+                <span class="block font-black text-[#2C221E] not-italic mt-2 text-right text-[11px]">{{ e.autor }}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="w-full py-2.5 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs rounded-xl border-2 border-[#2C221E] transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i class="fa-solid fa-images"></i>
+              <span>Ver fotos y videos</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+</div>

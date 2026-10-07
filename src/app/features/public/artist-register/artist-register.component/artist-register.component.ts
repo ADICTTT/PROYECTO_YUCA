@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CreatePerfileDto, ProfileService } from '@core/services/profile.service';
+import { ProfileService } from '@core/services/profile.service';
 
 @Component({
   selector: 'app-artist-register',
@@ -17,6 +17,9 @@ export class ArtistRegisterComponent {
   successMessage = false;
   errorMessage = '';
   instagramEnviado = ''; // <--- Variable para conservar el Instagram registrado
+
+  imagenPreview: string | null = null;
+  selectedFile: File | null = null;
 
   categories = [
     { label: 'Ilustradores', value: 'ILUSTRADORES' },
@@ -34,6 +37,14 @@ export class ArtistRegisterComponent {
     portafolioUrl: [''],
   });
 
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.imagenPreview = URL.createObjectURL(file);
+    }
+  }
+
   onSubmit(): void {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
@@ -48,30 +59,35 @@ export class ArtistRegisterComponent {
     // Guardamos el Instagram ingresado antes de limpiar el formulario
     this.instagramEnviado = val.instagram;
 
-    const payload: CreatePerfileDto = {
-      nombreReal: val.nombreReal,
-      celular: val.celular,
-      nombreComercial: val.nombreComercial,
-      categoria: val.categoria,
-      instagram: val.instagram,
-    };
+    const formData = new FormData();
+    formData.append('nombreReal', val.nombreReal);
+    formData.append('celular', val.celular);
+    formData.append('nombreComercial', val.nombreComercial);
+    formData.append('categoria', val.categoria);
+    formData.append('instagram', val.instagram);
 
     if (val.descripcion?.trim()) {
-      payload.descripcion = val.descripcion.trim();
+      formData.append('descripcion', val.descripcion.trim());
     }
 
     if (
       val.portafolioUrl?.trim() &&
       (val.portafolioUrl.startsWith('http://') || val.portafolioUrl.startsWith('https://'))
     ) {
-      payload.portafolioUrl = val.portafolioUrl.trim();
+      formData.append('portafolioUrl', val.portafolioUrl.trim());
     }
 
-    this.profileService.registerProfile(payload).subscribe({
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile);
+    }
+
+    this.profileService.registerProfile(formData).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.successMessage = true;
         this.profileForm.reset();
+        this.imagenPreview = null; // Limpiamos la vista previa
+        this.selectedFile = null;
       },
       error: (err: any) => {
         this.isSubmitting = false;

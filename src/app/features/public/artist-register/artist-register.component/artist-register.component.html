@@ -82,6 +82,20 @@
             </div>
           </div>
 
+          <!-- FOTO DE PERFIL / LOGO -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Foto de Perfil / Logo *</label>
+            <div class="flex items-center gap-3 bg-slate-50/50 border border-slate-200 rounded-2xl p-2">
+              <label class="cursor-pointer bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm">
+                Seleccionar archivo
+                <input type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden" />
+              </label>
+              <span class="text-xs text-slate-500 truncate max-w-[200px]">
+                {{ selectedFile ? selectedFile.name : 'Ningún archivo seleccionado' }}
+              </span>
+            </div>
+          </div>
+
           <div>
             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Usuario de Instagram *</label>
             <input
@@ -112,6 +126,8 @@
             />
           </div>
 
+
+
           <button
             type="submit"
             [disabled]="isSubmitting"
@@ -124,41 +140,32 @@
 
       <!-- Vista previa -->
       <div class="lg:col-span-5 space-y-4 sticky top-6">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vista previa de tu tarjeta</h3>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Vista previa de la credencial</h3>
         
-        <div class="bg-white border border-rose-100 rounded-3xl p-6 shadow-xl shadow-rose-500/5 space-y-4 relative overflow-hidden">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center font-black text-xl text-rose-500 shadow-sm">
-              {{ (profileForm.get('nombreComercial')?.value || 'A').charAt(0) | uppercase }}
-            </div>
-            <div>
-              <h4 class="font-bold text-lg text-slate-900">
-                {{ profileForm.get('nombreComercial')?.value || 'Nombre Comercial' }}
-              </h4>
-              <span class="text-xs font-semibold text-rose-500">
-                {{ profileForm.get('categoria')?.value || 'Categoría' }}
-              </span>
-            </div>
+        <div class="bg-white border-2 border-emerald-800 rounded-3xl p-6 shadow-xl text-center space-y-4 relative overflow-hidden max-w-xs mx-auto">
+          <!-- Encabezado de la credencial -->
+          <div class="text-[10px] font-black tracking-widest text-emerald-800 uppercase">
+            PROYECTO YUCA FEST
           </div>
 
-          <p class="text-xs text-slate-500 leading-relaxed min-h-[50px]">
-            {{ profileForm.get('descripcion')?.value || 'Aquí se mostrará tu biografía o resumen de arte...' }}
-          </p>
-
-          <div class="space-y-1 text-xs text-slate-600 border-t border-slate-100 pt-3">
-            <p *ngIf="profileForm.get('instagram')?.value">
-              <span class="text-slate-400">Instagram:</span> {{ profileForm.get('instagram')?.value }}
-            </p>
-            <p *ngIf="profileForm.get('celular')?.value">
-              <span class="text-slate-400">Contacto:</span> {{ profileForm.get('celular')?.value }}
-            </p>
-          </div>
-
-          <div class="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
-            <span>Estado:</span>
-            <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 font-bold border border-amber-200">
-              EN_REVISION
+          <!-- Píldora de Categoría -->
+          <div>
+            <span class="inline-block px-4 py-1.5 rounded-full bg-emerald-800 text-white font-black text-xs uppercase tracking-wide shadow-sm">
+              {{ profileForm.get('categoria')?.value || 'CATEGORÍA' }}
             </span>
+          </div>
+
+          <!-- Marco de la Fotografía -->
+          <div class="w-32 h-32 mx-auto rounded-2xl border-2 border-slate-200 bg-slate-100 overflow-hidden shadow-inner flex items-center justify-center">
+            <img *ngIf="imagenPreview" [src]="imagenPreview" alt="Foto de perfil" class="w-full h-full object-cover" />
+            <span *ngIf="!imagenPreview" class="text-slate-400 text-xs font-semibold">Sin imagen</span>
+          </div>
+
+          <!-- Nombre Artístico / Comercial -->
+          <div>
+            <h4 class="font-black text-xl text-slate-900 uppercase tracking-tight">
+              {{ profileForm.get('nombreComercial')?.value || 'NOMBRE ARTÍSTICO' }}
+            </h4>
           </div>
         </div>
       </div>

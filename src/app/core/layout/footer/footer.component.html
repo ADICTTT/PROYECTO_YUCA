@@ -1,0 +1,83 @@
+<footer class="bg-[#2C221E] text-[#FFFDF5] border-t-4 border-[#F4C453]">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
+
+    <!-- Columna izquierda -->
+    <nav aria-label="Explora" class="text-center md:text-left space-y-4 order-2 md:order-1">
+      <h3 class="text-sm font-black uppercase tracking-wide text-[#F4C453]">Explora</h3>
+      <ul class="space-y-2.5 text-sm font-semibold text-[#FFFDF5]/85">
+        <li>
+          <a routerLink="/" class="hover:text-[#F4C453] transition">Inicio</a>
+        </li>
+        <li>
+          <a routerLink="/" fragment="proximo-evento" class="hover:text-[#F4C453] transition">Próximo evento</a>
+        </li>
+        <li>
+          <a routerLink="/" fragment="ediciones" class="hover:text-[#F4C453] transition">Ediciones pasadas</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Centro: logo + redes -->
+    <div class="flex flex-col items-center text-center gap-5 order-1 md:order-2">
+      <a routerLink="/" class="flex items-center gap-3" aria-label="Proyecto Yuca, ir al inicio">
+        <span
+          class="w-14 h-14 grid place-items-center bg-[#E85A4F] text-white font-black text-3xl rounded-2xl border-[3px] border-[#FFFDF5] shadow-[3px_3px_0px_0px_rgba(244,196,83,1)]"
+        >
+          Y
+        </span>
+        <span class="text-2xl font-black tracking-tight uppercase">
+          Proyecto <span class="text-[#F4C453]">Yuca</span>
+        </span>
+      </a>
+
+      <p class="text-xs font-semibold text-[#FFFDF5]/70 max-w-xs">
+        La comunidad de ilustradores, emprendedores y expositores.
+      </p>
+
+      <ul class="flex items-center justify-center gap-3">
+        @for (red of redes; track red.nombre) {
+          <li>
+            <a
+              [href]="red.url"
+              target="_blank"
+              rel="noopener"
+              [attr.aria-label]="red.nombre"
+              class="w-10 h-10 grid place-items-center rounded-full bg-[#F4C453] text-[#2C221E] hover:bg-[#E85A4F] hover:text-white transition"
+            >
+              <i [class]="'fa-brands ' + red.icono"></i>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Columna derecha -->
+    <nav aria-label="Expositores" class="text-center md:text-right space-y-4 order-3">
+      <h3 class="text-sm font-black uppercase tracking-wide text-[#F4C453]">Expositores</h3>
+      <ul class="space-y-2.5 text-sm font-semibold text-[#FFFDF5]/85">
+        <li>
+          <a routerLink="/registro-artista" class="hover:text-[#F4C453] transition">Registrar perfil</a>
+        </li>
+        <li>
+          <a routerLink="/login" class="hover:text-[#F4C453] transition">Iniciar sesión</a>
+        </li>
+        <li>
+          <a routerLink="/perfil" class="hover:text-[#F4C453] transition">Mi perfil</a>
+        </li>
+      </ul>
+    </nav>
+
+  </div>
+
+  <!-- Barra inferior -->
+  <div class="bg-[#1B1411]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-semibold text-[#FFFDF5]/70">
+      <span>© {{ anio }} Proyecto Yuca. Todos los derechos reservados.</span>
+      <span class="inline-flex items-center gap-1.5">
+        Hecho con <i class="fa-solid fa-heart text-[#E85A4F]"></i> para la comunidad de artistas
+      </span>
+    </div>
+  </div>
+
+</footer>

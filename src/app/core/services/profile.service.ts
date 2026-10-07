@@ -26,6 +26,7 @@ export interface Perfil {
   portafolioUrl?: string;
   estado: string; // 'PENDIENTE' | 'APROBADA' | 'RECHAZADA'
   usuarioId?: string | null;
+  fotoUrl?: string;
 }
 
 @Injectable({
@@ -41,8 +42,8 @@ export class ProfileService {
   private readonly apiUrl = `${environment.apiUrl}/perfiles/publico/registro`;
 
   // --- MÉTODO EXISTENTE (FUNCIONANDO) ---
-  registerProfile(perfilData: CreatePerfileDto): Observable<any> {
-    return this.http.post(this.apiUrl, perfilData);
+  registerProfile(formData: FormData ): Observable<any> {
+    return this.http.post(this.apiUrl, formData);
   }
 
   // --- NUEVOS MÉTODOS PARA EL PANEL DE ADMINISTRACIÓN ---
@@ -64,6 +65,11 @@ export class ProfileService {
   // 3. Actualizar datos generales del perfil (PATCH /perfiles/:id)
   updatePerfil(id: number, data: Partial<Perfil>): Observable<Perfil> {
     return this.http.patch<Perfil>(`${this.baseUrl}/${id}`, data);
+  }
+
+  // 4. Actualizar perfil con archivo (FormData) en el panel de administración
+  updatePerfilWithFile(id: number, formData: FormData): Observable<Perfil> {
+    return this.http.put<Perfil>(`${this.baseUrl}/${id}`, formData);
   }
 
   cambiarEstado(id: number, estado: string): Observable<Perfil> {

@@ -1,0 +1,88 @@
+<header class="sticky top-0 z-50 bg-[#FFFDF5]/95 backdrop-blur border-b-2 border-[#2C221E]/15">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <a
+      routerLink="/"
+      (click)="cerrarMenu()"
+      class="flex items-center gap-3 shrink-0"
+      aria-label="Proyecto Yuca, ir al inicio"
+    >
+      <span
+        class="w-12 h-12 grid place-items-center bg-[#E85A4F] text-white font-black text-2xl rounded-xl border-[3px] border-[#2C221E] shadow-[2px_2px_0px_0px_rgba(44,34,30,1)]"
+      >
+        Y
+      </span>
+      <span class="text-xl sm:text-2xl font-black tracking-tight uppercase text-[#2C221E]">
+        Proyecto <span class="text-[#E85A4F]">Yuca</span>
+      </span>
+    </a>
+
+    <!-- Navegación escritorio -->
+    <nav class="hidden lg:flex items-center gap-1 text-[#2C221E]" aria-label="Principal">
+      @for (link of links; track link.texto) {
+        <a
+          [routerLink]="link.ruta"
+          [fragment]="link.fragmento"
+          routerLinkActive="text-[#E85A4F] bg-[#E85A4F]/10"
+          [routerLinkActiveOptions]="opcionesActivo"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide hover:bg-[#F4C453]/30 transition"
+        >
+          <i [class]="'fa-solid ' + link.icono"></i>
+          <span>{{ link.texto }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Botón de sesión (escritorio) -->
+    <a
+      routerLink="/login"
+      class="hidden lg:inline-flex items-center gap-2 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
+    >
+      <i class="fa-solid fa-right-to-bracket"></i>
+      <span>Iniciar sesión</span>
+    </a>
+
+    <!-- Botón hamburguesa (móvil) -->
+    <button
+      type="button"
+      (click)="alternarMenu()"
+      [attr.aria-expanded]="menuAbierto()"
+      aria-label="Abrir o cerrar el menú"
+      class="lg:hidden w-11 h-11 grid place-items-center bg-[#F4C453] text-[#2C221E] rounded-xl border-2 border-[#2C221E] shadow-[2px_2px_0px_0px_rgba(44,34,30,1)] cursor-pointer"
+    >
+      <i class="fa-solid" [class.fa-bars]="!menuAbierto()" [class.fa-xmark]="menuAbierto()"></i>
+    </button>
+  </div>
+
+  <!-- Menú móvil -->
+  @if (menuAbierto()) {
+    <nav
+      class="lg:hidden border-t-2 border-[#2C221E]/15 bg-[#FFFDF5] px-4 py-4 space-y-2 text-[#2C221E]"
+      aria-label="Principal móvil"
+    >
+      @for (link of links; track link.texto) {
+        <a
+          [routerLink]="link.ruta"
+          [fragment]="link.fragmento"
+          routerLinkActive="text-[#E85A4F] bg-[#E85A4F]/10"
+          [routerLinkActiveOptions]="opcionesActivo"
+          (click)="cerrarMenu()"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-black uppercase tracking-wide hover:bg-[#F4C453]/30 transition"
+        >
+          <i [class]="'fa-solid w-5 text-center ' + link.icono"></i>
+          <span>{{ link.texto }}</span>
+        </a>
+      }
+
+      <a
+        routerLink="/login"
+        (click)="cerrarMenu()"
+        class="flex items-center justify-center gap-2 bg-[#F4C453] text-[#2C221E] font-black text-sm py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]"
+      >
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>Iniciar sesión</span>
+      </a>
+    </nav>
+  }
+</header>
