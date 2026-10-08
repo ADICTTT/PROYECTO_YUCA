@@ -166,31 +166,25 @@ export class HomeComponent implements OnInit, OnDestroy {
   // ---------- Ediciones pasadas (reemplaza por datos reales) ----------
   eventosPasados = [
     {
-      titulo: 'Edición 1',
-      fecha: 'Fecha de la edición',
-      asistentes: '+000 asistentes',
-      expositores: '00 expositores',
-      resena: 'Aquí va la reseña de un expositor sobre su experiencia en esta edición.',
-      autor: '@expositor',
-      imagenBg: 'bg-[#E85A4F]',
+        titulo: 'Edición 1',
+        fecha: 'Evento pasado',
+        imagen: '/images/aficheUno.png',
+        resena: 'Una feria muy interesante. Nos encantó conocer a la Yuquita, la botarga del evento.',
+        autor: 'Un asistente',
     },
     {
-      titulo: 'Edición 2',
-      fecha: 'Fecha de la edición',
-      asistentes: '+000 asistentes',
-      expositores: '00 expositores',
-      resena: 'Aquí va la reseña de un expositor sobre su experiencia en esta edición.',
-      autor: '@expositor',
-      imagenBg: 'bg-[#7B8E3D]',
+        titulo: 'Edición 2',
+        fecha: 'Evento pasado',
+        imagen: '/images/aficheDos.png',
+        resena: 'Nos fue muy bien. Fue muy divertido, disfrutamos todas las convivencias y nos encantó.',
+        autor: 'Un expositor',
     },
     {
-      titulo: 'Edición 3',
-      fecha: 'Fecha de la edición',
-      asistentes: '+000 asistentes',
-      expositores: '00 expositores',
-      resena: 'Aquí va la reseña de un expositor sobre su experiencia en esta edición.',
-      autor: '@expositor',
-      imagenBg: 'bg-[#F4C453]',
+        titulo: 'Yukawaii Fest',
+        fecha: 'Evento pasado',
+        imagen: '/images/aficheTres.png',
+        resena: 'La tematica fue muy buena, espero con ansias la proxima version',
+        autor: 'Un asistente',
     },
-  ];
+    ];
 }

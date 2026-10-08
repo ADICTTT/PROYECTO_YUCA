@@ -237,51 +237,53 @@
       <span class="text-xs font-black uppercase tracking-widest text-[#E85A4F]">Nuestra Trayectoria</span>
       <h2 class="text-3xl sm:text-4xl font-black text-[#2C221E]">Ediciones Pasadas &amp; Experiencias</h2>
       <p class="text-xs sm:text-sm font-semibold text-[#5C5046]">
-        Mira cómo han vivido nuestros expositores e ilustradores las versiones anteriores de Proyecto Yuca.
+        Mira cómo han vivido nuestros expositores y asistentes las versiones anteriores de Proyecto Yuca.
       </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-      @for (e of eventosPasados; track e.titulo) {
-        <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+  @for (e of eventosPasados; track e.titulo) {
+    <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
 
-          <div [class]="'h-44 border-b-[3px] border-[#2C221E] p-4 flex flex-col justify-between ' + e.imagenBg">
-            <div class="flex justify-between items-center">
-              <span class="bg-[#2C221E] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
-                {{ e.asistentes }}
-              </span>
-              <span class="bg-white text-[#2C221E] text-[10px] font-black px-2.5 py-1 rounded-lg border border-[#2C221E]">
-                {{ e.expositores }}
-              </span>
-            </div>
-            <div class="text-white font-black text-xl drop-shadow-md flex items-center gap-2">
-              <i class="fa-solid fa-camera"></i>
-              <span>{{ e.titulo }}</span>
-            </div>
-          </div>
-
-          <div class="p-6 space-y-4 flex-grow flex flex-col justify-between">
-            <div>
-              <span class="text-[11px] font-bold text-[#E85A4F] uppercase block mb-1">{{ e.fecha }}</span>
-              <h3 class="text-xl font-black text-[#2C221E] mb-3">{{ e.titulo }}</h3>
-              <div class="bg-[#FFF9E6] p-3.5 rounded-2xl border border-[#2C221E]/15 text-xs font-medium text-[#5C5046] italic leading-relaxed">
-                <i class="fa-solid fa-quote-left text-[#E85A4F] mr-1"></i>
-                {{ e.resena }}
-                <span class="block font-black text-[#2C221E] not-italic mt-2 text-right text-[11px]">{{ e.autor }}</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              class="w-full py-2.5 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs rounded-xl border-2 border-[#2C221E] transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <i class="fa-solid fa-images"></i>
-              <span>Ver fotos y videos</span>
-            </button>
-          </div>
+      <!-- Afiche -->
+      <div class="relative h-72 border-b-[3px] border-[#2C221E] overflow-hidden bg-[#2C221E]">
+        <img
+          [src]="e.imagen"
+          [alt]="'Afiche de ' + e.titulo"
+          class="absolute inset-0 w-full h-full object-cover object-top"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-[#2C221E]/80 via-transparent to-transparent"></div>
+        <div class="absolute bottom-3 left-4 text-white font-black text-xl drop-shadow-md flex items-center gap-2">
+          <i class="fa-solid fa-camera"></i>
+          <span>{{ e.titulo }}</span>
         </div>
-      }
+      </div>
+
+      <div class="p-6 space-y-4 flex-grow flex flex-col justify-between">
+        <div>
+          <span class="text-[11px] font-bold text-[#E85A4F] uppercase block mb-1">{{ e.fecha }}</span>
+          <h3 class="text-xl font-black text-[#2C221E] mb-3">{{ e.titulo }}</h3>
+
+          @if (e.resena) {
+            <div class="bg-[#FFF9E6] p-3.5 rounded-2xl border border-[#2C221E]/15 text-xs font-medium text-[#5C5046] italic leading-relaxed">
+              <i class="fa-solid fa-quote-left text-[#E85A4F] mr-1"></i>
+              {{ e.resena }}
+              <span class="block font-black text-[#2C221E] not-italic mt-2 text-right text-[11px]">{{ e.autor }}</span>
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="w-full py-2.5 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs rounded-xl border-2 border-[#2C221E] transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <i class="fa-solid fa-images"></i>
+          <span>Ver fotos y videos</span>
+        </button>
+      </div>
     </div>
+  }
+</div>
   </section>
 
 </div>

@@ -14,7 +14,7 @@ export class FooterComponent {
   redes = [
     { nombre: 'Instagram', icono: 'fa-instagram', url: 'https://www.instagram.com/yukawaiifest' },
     { nombre: 'TikTok', icono: 'fa-tiktok', url: 'https://www.tiktok.com/@yukawaiifest' },
-    { nombre: 'Discord', icono: 'fa-discord', url: 'https://discord.com/' },
+    { nombre: 'Discord', icono: 'fa-discord', url: 'https://discord.gg/DfpuHVQt' },
     { nombre: 'Canal de WhatsApp', icono: 'fa-whatsapp', url: 'https://whatsapp.com/channel/0029Vb20xSb4NVie43lyiB1z' },
   ];
 }
