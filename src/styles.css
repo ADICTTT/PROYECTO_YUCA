@@ -1,6 +1,55 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+:root {
+  /* Los 3 colores que cambia el admin según el evento */
+  --c-primario: #E85A4F;
+  --c-secundario: #F4C453;
+  --c-acento: #7B8E3D;
+  --c-sobre-primario: #FFFFFF;
+  --c-sobre-secundario: #2C221E;
+  --c-sobre-acento: #FFFFFF;
+
+  /* Neutros de marca: modo claro */
+  --c-fondo: #FFFDF5;
+  --c-superficie: #FFF9E6;
+  --c-campo: #FFFFFF;
+  --c-tinta: #2C221E;
+  --c-tinta-suave: #5C5046;
+  --c-borde: #2C221E;
+  --c-panel: #2C221E;
+  --c-sobre-panel: #FFFDF5;
+}
+
+:root[data-modo='oscuro'] {
+  --c-fondo: #17120F;
+  --c-superficie: #231B17;
+  --c-campo: #1D1612;
+  --c-tinta: #FFFDF5;
+  --c-tinta-suave: #CBBFB3;
+  --c-borde: #4A3B33;
+  --c-panel: #0F0B09;
+  --c-sobre-panel: #FFFDF5;
+}
+
+@theme inline {
+  --color-primario: var(--c-primario);
+  --color-secundario: var(--c-secundario);
+  --color-acento: var(--c-acento);
+  --color-sobre-primario: var(--c-sobre-primario);
+  --color-sobre-secundario: var(--c-sobre-secundario);
+  --color-sobre-acento: var(--c-sobre-acento);
+  --color-fondo: var(--c-fondo);
+  --color-superficie: var(--c-superficie);
+  --color-campo: var(--c-campo);
+  --color-tinta: var(--c-tinta);
+  --color-tinta-suave: var(--c-tinta-suave);
+  --color-borde: var(--c-borde);
+  --color-panel: var(--c-panel);
+  --color-sobre-panel: var(--c-sobre-panel);
+}
+
 body {
   font-family: 'Fredoka', sans-serif;
+  background: var(--c-fondo);
+  color: var(--c-tinta);
 }

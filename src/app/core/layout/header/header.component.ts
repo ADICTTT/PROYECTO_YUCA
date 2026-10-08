@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service'; // ajusta la ruta a d
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './header.component.html',
+  host: { class: 'sticky top-0 z-50 block' },
 })
 export class HeaderComponent {
   private readonly auth = inject(AuthService);

@@ -103,7 +103,7 @@ export class ArtistRegisterComponent {
   getWhatsAppPostulacionLink(): string {
     // Usamos la variable guardada para que mantenga el Instagram que escribió el usuario
     const instagramUser = this.instagramEnviado || '@artista';
-    const numeroOrganizador = '60423998'; 
+    const numeroOrganizador = '69006784'; 
     const mensaje = `Hola, soy ${instagramUser}, ya realicé mi postulación para la adquisición de un stand en la feria`;
     return `https://wa.me/${numeroOrganizador}?text=${encodeURIComponent(mensaje)}`;
   }
