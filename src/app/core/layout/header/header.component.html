@@ -35,13 +35,35 @@
     </nav>
 
     <!-- Botón de sesión (escritorio) -->
-    <a
-      routerLink="/login"
-      class="hidden lg:inline-flex items-center gap-2 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
-    >
-      <i class="fa-solid fa-right-to-bracket"></i>
-      <span>Iniciar sesión</span>
-    </a>
+    @if (logueado()) {
+        <div class="hidden lg:flex items-center gap-2">
+            @if (esExpositor()) {
+            <a
+                routerLink="/mi-panel"
+                class="inline-flex items-center gap-2 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
+            >
+                <i class="fa-solid fa-user"></i>
+                <span>Mi panel</span>
+            </a>
+            }
+            <button
+            type="button"
+            (click)="salir()"
+            aria-label="Cerrar sesión"
+            class="w-11 h-11 grid place-items-center bg-white hover:bg-[#E85A4F] hover:text-white text-[#2C221E] rounded-2xl border-2 border-[#2C221E] transition cursor-pointer"
+            >
+            <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+        } @else {
+        <a
+            routerLink="/login"
+            class="hidden lg:inline-flex items-center gap-2 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)] transition hover:-translate-y-0.5"
+        >
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Iniciar sesión</span>
+        </a>
+        }
 
     <!-- Botón hamburguesa (móvil) -->
     <button
@@ -75,14 +97,35 @@
         </a>
       }
 
-      <a
-        routerLink="/login"
-        (click)="cerrarMenu()"
-        class="flex items-center justify-center gap-2 bg-[#F4C453] text-[#2C221E] font-black text-sm py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]"
-      >
-        <i class="fa-solid fa-right-to-bracket"></i>
-        <span>Iniciar sesión</span>
-      </a>
+      @if (logueado()) {
+        @if (esExpositor()) {
+            <a
+            routerLink="/mi-panel"
+            (click)="cerrarMenu()"
+            class="flex items-center justify-center gap-2 bg-[#F4C453] text-[#2C221E] font-black text-sm py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]"
+            >
+            <i class="fa-solid fa-user"></i>
+            <span>Mi panel</span>
+            </a>
+        }
+        <button
+            type="button"
+            (click)="salir()"
+            class="w-full flex items-center justify-center gap-2 bg-white text-[#2C221E] font-black text-sm py-3 px-5 rounded-2xl border-2 border-[#2C221E] cursor-pointer"
+        >
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Cerrar sesión</span>
+        </button>
+        } @else {
+        <a
+            routerLink="/login"
+            (click)="cerrarMenu()"
+            class="flex items-center justify-center gap-2 bg-[#F4C453] text-[#2C221E] font-black text-sm py-3 px-5 rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]"
+        >
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Iniciar sesión</span>
+        </a>
+        }
     </nav>
   }
 </header>

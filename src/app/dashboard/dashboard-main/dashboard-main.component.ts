@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ProfileService, Perfil } from '../../core/services/profile.service';
 import { environment } from 'src/environments/environment';
 import html2canvas from 'html2canvas-pro';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -22,9 +24,18 @@ export class DashboardMainComponent implements OnInit {
   // Propiedades nuevas para manejar la previsualización y el archivo seleccionado
   imagenPreview: string | null = null;
   selectedFile: File | null = null;
+    // Modal de credenciales
+  credencialesModal: { usuario: string; password: string; celular: string; nombre: string } | null = null;
 
-    private readonly fileBase = new URL(environment.apiUrl).origin;
+  private readonly fileBase = new URL(environment.apiUrl).origin;
 
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  cerrarSesion(): void {
+    this.auth.logout();
+    this.router.navigate(['/login']);
+  }
   readonly PLACEHOLDER =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
@@ -123,10 +134,40 @@ export class DashboardMainComponent implements OnInit {
   }
 
   actualizarEstadoDirecto(id: number, nuevoEstado: string): void {
+    const perfil = this.perfiles.find((p) => p.id === id);
+
     this.profileService.cambiarEstado(id, nuevoEstado).subscribe({
-      next: () => this.cargarPerfiles(),
+      next: (res) => {
+        if (res.credenciales && perfil) {
+          this.credencialesModal = {
+            usuario: res.credenciales.usuario,
+            password: res.credenciales.password,
+            celular: perfil.celular,
+            nombre: perfil.nombreComercial,
+          };
+        }
+        this.cargarPerfiles();
+      },
       error: () => alert('No se pudo cambiar el estado'),
     });
+  }
+
+  cerrarCredenciales(): void {
+    this.credencialesModal = null;
+  }
+
+  getWhatsAppCredencialesLink(): string {
+    const c = this.credencialesModal;
+    if (!c) return '#';
+    const telefono = c.celular.replace(/\D/g, '');
+    const mensaje =
+      `¡Hola ${c.nombre}! Tu perfil en Proyecto Yuca fue aprobado 🎉\n\n` +
+      `Ya puedes ingresar al sistema para elegir tu mesa:\n` +
+      `Usuario: ${c.usuario}\n` +
+      `Contraseña: ${c.password}\n\n` +
+      `Por seguridad, cambia tu contraseña al ingresar. ` +
+      `Síguenos también en el canal oficial para enterarte de las novedades.`;
+    return `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
   }
 
   // Método para exportar la credencial en PNG transparente

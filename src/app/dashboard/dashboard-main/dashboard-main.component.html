@@ -3,7 +3,9 @@
 
     <!-- Encabezado y filtros -->
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 bg-[#FFF9E6] border-2 border-[#2C221E]/15 p-5 sm:p-8 rounded-[2rem]">
-      <div class="space-y-2">
+        
+      
+        <div class="space-y-2">
         <span class="inline-block text-xs font-black uppercase tracking-wider text-[#E85A4F] bg-[#E85A4F]/10 px-3 py-1 rounded-full border border-[#E85A4F]/20">
           Administración
         </span>
@@ -51,8 +53,18 @@
           <i class="fa-solid fa-circle-xmark"></i>
           <span>Rechazados</span>
         </button>
+
+        <button 
+            type="button" 
+            (click)="cerrarSesion()" 
+            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black rounded-2xl border-2 border-[#2C221E] bg-white text-[#2C221E] hover:bg-[#E85A4F] hover:text-white transition cursor-pointer">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Cerrar sesión</span>
+        </button>
       </div>
     </div>
+
+    
 
     <!-- Tabla de artistas -->
     <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
@@ -303,6 +315,46 @@
         </div>
       </div>
     </div>
+    
+        <!-- Modal de credenciales (no se cierra con Enter) -->
+    <div
+      *ngIf="credencialesModal"
+      class="fixed inset-0 bg-[#2C221E]/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+    >
+      <div class="bg-[#FFF9E6] rounded-[2rem] max-w-md w-full p-6 sm:p-8 space-y-5 border-4 border-[#2C221E] shadow-[6px_6px_0px_0px_rgba(44,34,30,1)]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-circle-check text-[#7B8E3D] text-xl"></i>
+          <h2 class="text-xl font-black text-[#2C221E]">Cuenta creada</h2>
+        </div>
 
+        <p class="text-xs font-semibold text-[#5C5046]">
+          Envía estas credenciales a <strong>{{ credencialesModal.nombre }}</strong>. No se podrán volver a ver después de cerrar esta ventana.
+        </p>
+
+        <div class="bg-white border-2 border-[#F4C453] rounded-2xl p-4 space-y-2 text-sm">
+          <div><span class="text-xs font-black text-[#5C5046] uppercase">Usuario</span><br /><span class="font-bold text-[#2C221E] select-all">{{ credencialesModal.usuario }}</span></div>
+          <div><span class="text-xs font-black text-[#5C5046] uppercase">Contraseña</span><br /><span class="font-bold text-[#2C221E] select-all">{{ credencialesModal.password }}</span></div>
+        </div>
+
+        <div class="flex flex-col-reverse sm:flex-row justify-end gap-3">
+          <button
+            type="button"
+            (click)="cerrarCredenciales()"
+            class="px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer"
+          >
+            Cerrar
+          </button>
+          <a
+            [href]="getWhatsAppCredencialesLink()"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#7B8E3D] hover:bg-[#687833] text-white font-black text-xs rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)] transition"
+          >
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>Enviar por WhatsApp</span>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

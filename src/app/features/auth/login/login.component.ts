@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
@@ -26,8 +27,12 @@ export class LoginComponent {
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
-        // Asegúrate de que apunte a tu ruta de postulaciones del admin:
-        this.router.navigate(['/admin/postulaciones']);
+        const rol = this.authService.getRol();
+        if (rol === 'ADMIN') {
+          this.router.navigate(['/admin/postulaciones']);
+        } else {
+          this.router.navigate(['/mi-panel']);
+        }
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Credenciales incorrectas';

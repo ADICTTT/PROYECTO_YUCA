@@ -1,0 +1,114 @@
+<div class="min-h-screen bg-[#FFFDF5] text-[#2C221E] flex items-center justify-center p-6">
+  <div class="max-w-md w-full bg-[#FFF9E6] border-[3px] border-[#2C221E] rounded-3xl p-8 space-y-5 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+
+    <h1 class="text-2xl font-black text-center">Mi panel</h1>
+
+    @if (cargando()) {
+      <p class="text-center text-sm font-semibold">Cargando tu perfil...</p>
+    } @else if (error()) {
+      <p class="text-center text-sm font-bold text-red-700">{{ error() }}</p>
+    } @else if (perfil(); as p) {
+
+      <!-- Ficha del perfil -->
+      <div class="bg-white border-2 border-[#2C221E] rounded-2xl p-4 text-sm space-y-1">
+        <p class="font-black text-base">{{ p.nombreComercial }}</p>
+        <p><span class="font-bold">Categoría:</span> {{ p.categoria }}</p>
+        <p><span class="font-bold">Instagram:</span> {{ p.instagram }}</p>
+      </div>
+
+      <!-- ESTADO: PENDIENTE -->
+      @if (p.estado === 'PENDIENTE') {
+        <div class="text-center space-y-2">
+          <span class="inline-block px-4 py-1 rounded-full bg-[#F4C453] border-2 border-[#2C221E] text-xs font-black">
+            Perfil en revisión
+          </span>
+          <p class="text-sm font-semibold text-[#5C5046]">
+            Proyecto Yuca revisará tu perfil en un plazo de hasta 24 horas.
+            Mientras tanto no puedes seleccionar mesa.
+          </p>
+        </div>
+      }
+
+      <!-- ESTADO: RECHAZADO -->
+      @if (p.estado === 'RECHAZADO') {
+        <p class="text-center text-sm font-bold text-red-700">
+          Tu perfil no fue aprobado. Escríbenos por WhatsApp para más información.
+        </p>
+      }
+
+      <!-- ESTADO: APROBADO sin mesa -->
+      @if (p.estado === 'APROBADO' && !p.mesa) {
+        <div class="space-y-4">
+          <span class="block text-center px-4 py-1 rounded-full bg-green-200 border-2 border-[#2C221E] text-xs font-black">
+            ¡Perfil aprobado!
+          </span>
+
+          <div class="bg-white border-2 border-[#2C221E] rounded-2xl p-4 text-xs space-y-2">
+            <p class="font-black text-sm">Reglas y condiciones de participación</p>
+            <p class="font-semibold text-[#5C5046]">
+              Una vez seleccionada la mesa, tendrás <strong>24 horas</strong> para realizar el pago.
+              Si el pago no se realiza dentro de ese plazo, la organización podrá liberar la mesa
+              y ponerla nuevamente disponible.
+            </p>
+            <label class="flex items-start gap-2 font-bold cursor-pointer">
+              <input type="checkbox" class="mt-0.5" [checked]="reglasAceptadas()" (change)="alternarReglas($event)" />
+              He leído y acepto las reglas y condiciones.
+            </label>
+          </div>
+
+          <button
+            type="button"
+            (click)="seleccionarMesa()"
+            [disabled]="!reglasAceptadas()"
+            class="w-full px-5 py-3 bg-[#F4C453] text-[#2C221E] font-black text-sm rounded-2xl border-2 border-[#2C221E] transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Seleccionar mesa
+          </button>
+        </div>
+      }
+
+      <!-- ESTADO: APROBADO con mesa -->
+      @if (p.estado === 'APROBADO' && p.mesa; as _) {
+        <div class="space-y-3 text-center">
+          <p class="text-sm font-bold">Mesa reservada: <span class="text-xl font-black">{{ p.mesa.numero }}</span></p>
+          @if (!p.mesa.pagada) {
+            <p class="text-sm font-semibold text-[#5C5046]">
+              Tienes hasta el <strong>{{ p.mesa.expiraEn | date: 'dd/MM/yyyy HH:mm' }}</strong> para pagar.
+              Pasado ese plazo la mesa podrá ser liberada.
+            </p>
+            <a
+              [href]="comprobanteUrl()"
+              target="_blank"
+              rel="noopener"
+              class="block w-full px-5 py-3 bg-green-500 text-white font-black text-sm rounded-2xl border-2 border-[#2C221E] cursor-pointer"
+            >
+              Enviar comprobante por WhatsApp
+            </a>
+          } @else {
+            <p class="text-sm font-black text-green-700">Pago confirmado ✔</p>
+          }
+        </div>
+      }
+
+      <!-- Canal de WhatsApp (pendiente y aprobado) -->
+      @if (p.estado !== 'RECHAZADO') {
+        <a
+          [href]="canalUrl"
+          target="_blank"
+          rel="noopener"
+          class="block text-center w-full px-5 py-3 bg-white text-[#2C221E] font-black text-sm rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer"
+        >
+          Seguir canal de Proyecto Yuca
+        </a>
+      }
+    }
+
+    <button
+      type="button"
+      (click)="salir()"
+      class="w-full px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer"
+    >
+      Cerrar sesión
+    </button>
+  </div>
+</div>

@@ -27,6 +27,14 @@ export interface Perfil {
   estado: string; // 'PENDIENTE' | 'APROBADA' | 'RECHAZADA'
   usuarioId?: string | null;
   fotoUrl?: string;
+  credenciales?: { usuario: string; password: string } | null;
+  mesa?: MesaReserva | null;
+}
+
+export interface MesaReserva {
+  numero: string;
+  expiraEn: string; // fecha límite de pago (ISO)
+  pagada: boolean;
 }
 
 @Injectable({
@@ -41,6 +49,9 @@ export class ProfileService {
   // URL específica para el registro público
   private readonly apiUrl = `${environment.apiUrl}/perfiles/publico/registro`;
 
+  mio() {
+    return this.http.get<Perfil>(`${this.baseUrl}/mio`);
+  }
   // --- MÉTODO EXISTENTE (FUNCIONANDO) ---
   registerProfile(formData: FormData ): Observable<any> {
     return this.http.post(this.apiUrl, formData);

@@ -21,6 +21,18 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`; // Reemplaza por la URL de tu backend en NestJS
   private readonly TOKEN_KEY = 'yuca_access_token';
 
+  getRol(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
+      return payload.rol ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   login(credentials: LoginDto): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
       tap((response) => {
@@ -44,6 +56,18 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const { exp } = JSON.parse(atob(base64));
+      if (exp && Date.now() / 1000 > exp) {
+        this.logout();
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
