@@ -71,12 +71,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       icono: 'fa-brands fa-whatsapp',
       etiqueta: 'CANAL OFICIAL',
       fondo: 'bg-[#5C5046]',
+      imagen: '/images/yuka1.png',
       acciones: [
         {
           texto: 'Seguir canal de Proyecto Yuca',
           icono: 'fa-solid fa-bullhorn',
           estilo: 'secundario',
-          url: this.evento.whatsappCanal,
+          url: "https://whatsapp.com/channel/0029Vb20xSb4NVie43lyiB1z",
         },
       ],
     },
