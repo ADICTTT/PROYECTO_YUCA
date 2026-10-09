@@ -40,7 +40,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   // ---------- Carrusel ----------
   slides: Slide[] = [
     {
-      tag: `${this.evento.fechaTexto} · ${this.evento.ubicacion}`,
+      tag: `${this.evento.fechaTexto} · ${this.evento.lugarCorto}`,
       titulo: this.evento.nombre,
       subtitulo: this.evento.descripcion,
       icono: 'fa-solid fa-star',
@@ -77,7 +77,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           texto: 'Seguir canal de Proyecto Yuca',
           icono: 'fa-solid fa-bullhorn',
           estilo: 'secundario',
-          url: "https://whatsapp.com/channel/0029Vb20xSb4NVie43lyiB1z",
+          url: 'https://whatsapp.com/channel/0029Vb20xSb4NVie43lyiB1z',
         },
       ],
     },
@@ -163,28 +163,31 @@ export class HomeComponent implements OnInit, OnDestroy {
     },
   ];
 
-  // ---------- Ediciones pasadas (reemplaza por datos reales) ----------
+  // ---------- Ediciones pasadas ----------
   eventosPasados = [
     {
-        titulo: 'Edición 1',
-        fecha: 'Evento pasado',
-        imagen: '/images/aficheUno.png',
-        resena: 'Una feria muy interesante. Nos encantó conocer a la Yuquita, la botarga del evento.',
-        autor: 'Un asistente',
+      titulo: 'Edición 1',
+      fecha: 'Evento pasado',
+      imagen: '/images/aficheUno.png',
+      resena: 'Una feria muy interesante. Nos encantó conocer a la Yuquita, la botarga del evento.',
+      autor: 'Un asistente',
+      enlace: 'https://www.instagram.com/s/aGlnaGxpZ2h0OjE4MTUyMDUxMzI2NDE1OTAx?story_media_id=3599932629618338104_68706629509&srtk=eDFtMDhpNHcxdmto',
     },
     {
-        titulo: 'Edición 2',
-        fecha: 'Evento pasado',
-        imagen: '/images/aficheDos.png',
-        resena: 'Nos fue muy bien. Fue muy divertido, disfrutamos todas las convivencias y nos encantó.',
-        autor: 'Un expositor',
+      titulo: 'Edición 2',
+      fecha: 'Evento pasado',
+      imagen: '/images/aficheDos.png',
+      resena: 'Fue un evento muy divertido, me encanto conocer por primera vez a tantos artistas y gente que consume mi contenido. Ame la experiencia, no faltare a ninguna version :D.',
+      autor: '@adi.ct_ (Compadre)',
+      enlace: 'https://www.instagram.com/s/aGlnaGxpZ2h0OjE4MTAzNjUwOTU4OTcxNTEy?story_media_id=3716030675951748694_68706629509&mdxt=ZWR0anh6enFqbG51',
     },
     {
-        titulo: 'Yukawaii Fest',
-        fecha: 'Evento pasado',
-        imagen: '/images/aficheTres.png',
-        resena: 'La tematica fue muy buena, espero con ansias la proxima version',
-        autor: 'Un asistente',
+      titulo: 'Yukawaii Fest',
+      fecha: 'Evento pasado',
+      imagen: '/images/aficheTres.png',
+      resena: 'La tematica fue muy buena, espero con ansias la proxima version',
+      autor: 'Un asistente',
+      enlace: 'https://www.instagram.com/s/aGlnaGxpZ2h0OjE3OTM4OTc2Mzg4MTk5MDI0?story_media_id=3876894280543714549_68706629509&cplk=MXMxaG1pNG05dWtjeQ==',
     },
-    ];
+  ];
 }

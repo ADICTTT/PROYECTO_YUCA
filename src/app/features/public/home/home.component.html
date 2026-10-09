@@ -273,13 +273,17 @@
           }
         </div>
 
-        <button
-          type="button"
-          class="w-full py-2.5 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs rounded-xl border-2 border-[#2C221E] transition flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <i class="fa-solid fa-images"></i>
-          <span>Ver fotos y videos</span>
-        </button>
+        @if (e.enlace) {
+          <a
+            [href]="e.enlace"
+            target="_blank"
+            rel="noopener"
+            class="w-full py-2.5 bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black text-xs rounded-xl border-2 border-[#2C221E] transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i class="fa-solid fa-images"></i>
+            <span>Ver fotos y videos</span>
+          </a>
+        }
       </div>
     </div>
   }
