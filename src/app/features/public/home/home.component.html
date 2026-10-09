@@ -160,13 +160,11 @@
     <!-- Categorías -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       @for (cat of categorias; track cat.nombre) {
-        <div class="bg-[#FFF9E6] border-2 border-[#2C221E]/15 rounded-3xl p-6 flex items-start gap-4">
-          <span class="w-12 h-12 shrink-0 grid place-items-center bg-[#F4C453] text-[#2C221E] rounded-2xl border-2 border-[#2C221E]">
-            <i [class]="cat.icono"></i>
-          </span>
+        <div [class]="'rounded-3xl p-6 flex items-center gap-4 border-[3px] border-[#2C221E] shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] ' + cat.color">
+          <i [class]="cat.icono + ' text-3xl w-10 text-center shrink-0'"></i>
           <div>
-            <h3 class="text-lg font-black text-[#2C221E]">{{ cat.nombre }}</h3>
-            <p class="text-xs font-semibold text-[#5C5046] mt-1">{{ cat.texto }}</p>
+            <h3 class="text-lg font-black">{{ cat.nombre }}</h3>
+            <p class="text-xs font-semibold opacity-90 mt-1">{{ cat.texto }}</p>
           </div>
         </div>
       }

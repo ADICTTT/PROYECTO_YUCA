@@ -124,9 +124,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // ---------- Categorías ----------
   categorias = [
-    { nombre: 'Ilustradores', icono: 'fa-solid fa-pen-nib', texto: 'Artistas y creadores de arte original.' },
-    { nombre: 'Emprendedores', icono: 'fa-solid fa-store', texto: 'Marcas y tiendas con productos propios.' },
-    { nombre: 'Comida', icono: 'fa-solid fa-utensils', texto: 'Postres, bebidas y propuestas gastronómicas.' },
+    { nombre: 'Ilustradores', icono: 'fa-solid fa-pen-nib', texto: 'Artistas y creadores de arte original.',color: 'bg-[#F4C453] text-[#2C221E]' },
+    { nombre: 'Emprendedores', icono: 'fa-solid fa-store', texto: 'Marcas y tiendas con productos propios.',color: 'bg-[#7B8E3D] text-white' },
+    { nombre: 'Comida', icono: 'fa-solid fa-utensils', texto: 'Postres, bebidas y propuestas gastronómicas.', color: 'bg-[#E85A4F] text-white'},
   ];
 
   // ---------- Pasos para participar ----------
