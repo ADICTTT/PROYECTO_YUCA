@@ -16,8 +16,8 @@ export class MiPanelComponent implements OnInit {
   private readonly perfilService = inject(ProfileService);
 
   // Reemplaza por los enlaces reales de Proyecto Yuca
-  readonly canalUrl = 'https://whatsapp.com/channel/XXXXXXXX';
-  private readonly whatsappNumero = 'XXXXXXXXXXX'; // código de país + número, sin + ni espacios
+  readonly canalUrl = 'https://whatsapp.com/channel/0029Vb20xSb4NVie43lyiB1z'; 
+  private readonly whatsappNumero = '59169006784'; // código de país + número, sin + ni espacios
 
   readonly perfil = signal<Perfil | null>(null);
   readonly cargando = signal(true);
