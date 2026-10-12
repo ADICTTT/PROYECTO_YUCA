@@ -4,6 +4,8 @@ import { authGuard } from './core/guards/auth.guard';
 import { ArtistRegisterComponent } from './features/public/artist-register/artist-register.component/artist-register.component';
 import { HomeComponent } from './features/public/home/home.component';
 import { roleGuard } from './core/guards/role.guard';
+import { credencialesGuard } from './core/guards/credenciales.guard';
+
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -19,10 +21,16 @@ export const routes: Routes = [
   data: { roles: ['ADMIN'] },
 },
 {
+  path: 'mi-cuenta',
+  loadComponent: () =>
+    import('./features/expositor/mi-cuenta/mi-cuenta.component').then(m => m.MiCuentaComponent),
+  canActivate: [authGuard],
+},
+{
   path: 'mi-panel',
   loadComponent: () =>
     import('./features/expositor/mi-panel/mi-panel.component').then(m => m.MiPanelComponent),
-  canActivate: [authGuard, roleGuard],
+  canActivate: [authGuard, roleGuard, credencialesGuard],
   data: { roles: ['EXPOSITOR'] },
 },
 

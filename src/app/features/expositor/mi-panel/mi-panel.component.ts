@@ -1,13 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Perfil, ProfileService } from '../../../core/services/profile.service';
 
 @Component({
   selector: 'app-mi-panel',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './mi-panel.component.html',
 })
 export class MiPanelComponent implements OnInit {

@@ -26,7 +26,11 @@ export class LoginComponent {
     }
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
-      next: () => {
+      next: (res) => {
+        if (res.debeCambiarPassword) {
+          this.router.navigate(['/mi-cuenta']);
+          return;
+        }
         const rol = this.authService.getRol();
         if (rol === 'ADMIN') {
           this.router.navigate(['/admin/postulaciones']);

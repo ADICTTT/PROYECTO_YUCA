@@ -3,9 +3,8 @@
 
     <!-- Encabezado y filtros -->
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 bg-[#FFF9E6] border-2 border-[#2C221E]/15 p-5 sm:p-8 rounded-[2rem]">
-        
-      
-        <div class="space-y-2">
+
+      <div class="space-y-2">
         <span class="inline-block text-xs font-black uppercase tracking-wider text-[#E85A4F] bg-[#E85A4F]/10 px-3 py-1 rounded-full border border-[#E85A4F]/20">
           Administración
         </span>
@@ -54,17 +53,21 @@
           <span>Rechazados</span>
         </button>
 
-        <button 
-            type="button" 
-            (click)="cerrarSesion()" 
-            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black rounded-2xl border-2 border-[#2C221E] bg-white text-[#2C221E] hover:bg-[#E85A4F] hover:text-white transition cursor-pointer">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Cerrar sesión</span>
+        <button
+          type="button"
+          (click)="cerrarSesion()"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black rounded-2xl border-2 border-[#2C221E] bg-white text-[#2C221E] hover:bg-[#E85A4F] hover:text-white transition cursor-pointer">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Cerrar sesión</span>
         </button>
+
+        <a routerLink="/mi-cuenta"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black rounded-2xl border-2 border-[#2C221E] bg-white text-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer">
+          <i class="fa-solid fa-key"></i>
+          <span>Cambiar mis credenciales</span>
+        </a>
       </div>
     </div>
-
-    
 
     <!-- Tabla de artistas -->
     <div class="bg-[#FFFDF5] border-[3px] border-[#2C221E] rounded-3xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
@@ -107,7 +110,6 @@
               <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm space-y-1.5">
                 <div class="text-[#2C221E] font-bold text-xs">{{ p.celular }}</div>
                 <div class="flex items-center gap-2">
-                  <!-- Botón WhatsApp -->
                   <a
                     [href]="getWhatsAppLink(p.celular)"
                     target="_blank"
@@ -117,7 +119,6 @@
                     <i class="fa-brands fa-whatsapp"></i>
                     <span>WhatsApp</span>
                   </a>
-                  <!-- Botón Portafolio (solo si existe) -->
                   <a
                     *ngIf="p.portafolioUrl"
                     [href]="p.portafolioUrl"
@@ -154,6 +155,19 @@
                     <i class="fa-solid fa-pen-to-square"></i>
                     <span>Revisar / Editar</span>
                   </button>
+
+                  <!-- Restablecer credenciales (solo aprobados, que ya tienen cuenta) -->
+                  <button
+                    *ngIf="p.estado === 'APROBADO'"
+                    type="button"
+                    (click)="restablecerCredenciales(p)"
+                    title="Restablecer a credenciales iniciales"
+                    class="inline-flex items-center gap-1.5 text-[#2C221E] font-black text-xs bg-white hover:bg-[#E85A4F] hover:text-white px-3 py-2 rounded-xl border-2 border-[#2C221E] transition cursor-pointer"
+                  >
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Restablecer</span>
+                  </button>
+
                   <select
                     (change)="actualizarEstadoDirecto(p.id, $any($event.target).value)"
                     aria-label="Cambiar estado"
@@ -244,17 +258,15 @@
             ></textarea>
           </div>
 
-          <!-- NUEVA SECCIÓN: VISTA PREVIA DE FOTO Y DESCARGA DE CREDENCIAL PNG -->
+          <!-- Vista previa de foto y descarga de credencial PNG -->
           <div class="border-t-2 border-[#2C221E]/15 pt-4 space-y-3">
             <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide">Credencial y Fotografía</label>
-            
+
             <div class="flex flex-col sm:flex-row items-center gap-4 bg-white border-2 border-[#F4C453] rounded-2xl p-4">
-              <!-- Miniatura de la foto -->
               <div class="w-20 h-20 rounded-xl border-2 border-[#2C221E] bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
                 <img [src]="fotoActual" (error)="onImgError($event)" alt="Foto de perfil" class="w-full h-full object-cover" />
               </div>
 
-              <!-- Acciones de foto y descarga -->
               <div class="space-y-2 flex-1 w-full text-center sm:text-left">
                 <label class="inline-block bg-[#F4C453] hover:bg-[#ebd173] text-[#2C221E] font-black px-3.5 py-2 rounded-xl text-xs border-2 border-[#2C221E] transition cursor-pointer shadow-[2px_2px_0px_0px_rgba(44,34,30,1)]">
                   Cambiar foto
@@ -262,9 +274,9 @@
                 </label>
 
                 <div>
-                  <button 
-                    type="button" 
-                    (click)="downloadCredentialPNG()" 
+                  <button
+                    type="button"
+                    (click)="downloadCredentialPNG()"
                     class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#7B8E3D] hover:bg-[#687833] text-white font-black px-3.5 py-2 rounded-xl text-xs border-2 border-[#2C221E] transition shadow-[2px_2px_0px_0px_rgba(44,34,30,1)] cursor-pointer mt-1"
                   >
                     <i class="fa-solid fa-download"></i>
@@ -315,8 +327,8 @@
         </div>
       </div>
     </div>
-    
-        <!-- Modal de credenciales (no se cierra con Enter) -->
+
+    <!-- Modal de credenciales (no se cierra con Enter) -->
     <div
       *ngIf="credencialesModal"
       class="fixed inset-0 bg-[#2C221E]/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
@@ -324,7 +336,7 @@
       <div class="bg-[#FFF9E6] rounded-[2rem] max-w-md w-full p-6 sm:p-8 space-y-5 border-4 border-[#2C221E] shadow-[6px_6px_0px_0px_rgba(44,34,30,1)]">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-circle-check text-[#7B8E3D] text-xl"></i>
-          <h2 class="text-xl font-black text-[#2C221E]">Cuenta creada</h2>
+          <h2 class="text-xl font-black text-[#2C221E]">Credenciales de acceso</h2>
         </div>
 
         <p class="text-xs font-semibold text-[#5C5046]">
@@ -344,6 +356,7 @@
           >
             Cerrar
           </button>
+          
           <a
             [href]="getWhatsAppCredencialesLink()"
             target="_blank"

@@ -1,0 +1,60 @@
+<div class="min-h-screen bg-[#FFFDF5] text-[#2C221E] flex items-center justify-center p-6">
+  <div class="max-w-md w-full bg-[#FFF9E6] border-[3px] border-[#2C221E] rounded-3xl p-8 space-y-5 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+
+    <h1 class="text-2xl font-black text-center">Actualizar mi cuenta</h1>
+
+    @if (forzado) {
+      <p class="text-center text-sm font-semibold text-[#5C5046]">
+        Estás usando credenciales generadas por defecto. Por seguridad, cámbialas para continuar.
+      </p>
+    }
+
+    @if (error()) {
+      <div class="p-3 bg-[#E85A4F]/20 border-2 border-[#E85A4F] rounded-2xl text-[#8B1E14] text-sm font-black">
+        {{ error() }}
+      </div>
+    }
+
+    <form (ngSubmit)="guardar()" class="space-y-4">
+      <div>
+        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Contraseña actual</label>
+        <input type="password" [(ngModel)]="passwordActual" name="passwordActual" required
+          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Nuevo usuario (opcional)</label>
+        <input type="text" [(ngModel)]="nuevoNombreUsuario" name="nuevoNombreUsuario"
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+        <p class="text-[11px] font-semibold text-[#5C5046] mt-1">
+            Déjalo vacío para conservar tu usuario actual. Si lo cambias: letras, números, punto, guion y guion bajo (4 a 30).
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Nueva contraseña</label>
+        <input type="password" [(ngModel)]="nuevaPassword" name="nuevaPassword" required
+          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Confirmar contraseña</label>
+        <input type="password" [(ngModel)]="confirmar" name="confirmar" required
+          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+      </div>
+
+      <button type="submit" [disabled]="guardando()"
+        class="w-full px-5 py-3 bg-[#F4C453] text-[#2C221E] font-black text-sm rounded-2xl border-2 border-[#2C221E] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+        {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </form>
+
+    
+    @if (!forzado) {
+        <a [routerLink]="rutaVolver"
+            class="block text-center w-full px-5 py-3 bg-white font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition">
+            Volver
+        </a>
+    }
+  </div>
+</div>

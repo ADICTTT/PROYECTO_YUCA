@@ -6,16 +6,18 @@ import { environment } from 'src/environments/environment';
 import html2canvas from 'html2canvas-pro';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-main',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard-main.component.html'
 })
 export class DashboardMainComponent implements OnInit {
   private profileService = inject(ProfileService);
-
+  
+  
   perfiles: Perfil[] = [];
   filtroEstado: string = '';
   perfilSeleccionado: Perfil | null = null;
@@ -25,7 +27,13 @@ export class DashboardMainComponent implements OnInit {
   imagenPreview: string | null = null;
   selectedFile: File | null = null;
     // Modal de credenciales
-  credencialesModal: { usuario: string; password: string; celular: string; nombre: string } | null = null;
+  credencialesModal: {
+    usuario: string;
+    password: string;
+    celular: string;
+    nombre: string;
+    esReset?: boolean;
+  } | null = null;
 
   private readonly fileBase = new URL(environment.apiUrl).origin;
 
@@ -133,6 +141,26 @@ export class DashboardMainComponent implements OnInit {
     }
   }
 
+  restablecerCredenciales(p: any): void {
+    const ok = confirm(
+      `¿Restablecer las credenciales de ${p.nombreComercial}? Su contraseña actual dejará de funcionar.`,
+    );
+    if (!ok) return;
+
+    this.auth.restablecerCredenciales(p.id).subscribe({
+      next: (res: { nombre: string; usuario: string; password: string }) => {
+        this.credencialesModal = {
+          nombre: res.nombre,
+          usuario: res.usuario,
+          password: res.password,
+          celular: p.celular,
+          esReset: true,
+        };
+      },
+      error: (err: any) => alert(err.error?.message || 'No se pudo restablecer'),
+    });
+  }
+
   actualizarEstadoDirecto(id: number, nuevoEstado: string): void {
     const perfil = this.perfiles.find((p) => p.id === id);
 
@@ -160,13 +188,19 @@ export class DashboardMainComponent implements OnInit {
     const c = this.credencialesModal;
     if (!c) return '#';
     const telefono = c.celular.replace(/\D/g, '');
-    const mensaje =
-      `¡Hola ${c.nombre}! Tu perfil en Proyecto Yuca fue aprobado 🎉\n\n` +
-      `Ya puedes ingresar al sistema para elegir tu mesa:\n` +
-      `Usuario: ${c.usuario}\n` +
-      `Contraseña: ${c.password}\n\n` +
-      `Por seguridad, cambia tu contraseña al ingresar. ` +
-      `Síguenos también en el canal oficial para enterarte de las novedades.`;
+
+    const mensaje = c.esReset
+      ? `Hola ${c.nombre}, restablecimos tus credenciales de Proyecto Yuca.\n\n` +
+        `Usuario: ${c.usuario}\n` +
+        `Contraseña: ${c.password}\n\n` +
+        `Al ingresar, el sistema te pedirá crear una contraseña nueva.`
+      : `¡Hola ${c.nombre}! Tu perfil en Proyecto Yuca fue aprobado 🎉\n\n` +
+        `Ya puedes ingresar al sistema para elegir tu mesa:\n` +
+        `Usuario: ${c.usuario}\n` +
+        `Contraseña: ${c.password}\n\n` +
+        `Por seguridad, cambia tu contraseña al ingresar. ` +
+        `Síguenos también en el canal oficial para enterarte de las novedades.`;
+
     return `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
   }
 

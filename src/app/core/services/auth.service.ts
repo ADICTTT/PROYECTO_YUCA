@@ -11,6 +11,13 @@ export interface LoginDto {
 export interface AuthResponse {
   access_token: string;
   user: any;
+  debeCambiarPassword: boolean;
+}
+
+export interface CambiarCredencialesDto {
+  passwordActual: string;
+  nuevoNombreUsuario?: string;
+  nuevaPassword: string;
 }
 
 @Injectable({
@@ -18,8 +25,9 @@ export interface AuthResponse {
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/auth`; // Reemplaza por la URL de tu backend en NestJS
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly TOKEN_KEY = 'yuca_access_token';
+  private readonly FLAG_KEY = 'yuca_debe_cambiar';
 
   getRol(): string | null {
     const token = this.getToken();
@@ -38,13 +46,23 @@ export class AuthService {
       tap((response) => {
         if (response?.access_token) {
           this.setToken(response.access_token);
+          localStorage.setItem(this.FLAG_KEY, String(!!response.debeCambiarPassword));
         }
       })
     );
   }
 
+  debeCambiarPassword(): boolean {
+    return localStorage.getItem(this.FLAG_KEY) === 'true';
+  }
+
+  cambiarCredenciales(data: CambiarCredencialesDto) {
+    return this.http.patch<{ message: string }>(`${this.apiUrl}/cambiar-credenciales`, data);
+  }
+
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.FLAG_KEY);
   }
 
   getToken(): string | null {
@@ -69,5 +87,12 @@ export class AuthService {
     } catch {
       return false;
     }
+  }
+
+  restablecerCredenciales(perfilId: number) {
+    return this.http.post<{ nombre: string; usuario: string; password: string }>(
+      `${this.apiUrl}/restablecer-credenciales/${perfilId}`,
+      {},
+    );
   }
 }
