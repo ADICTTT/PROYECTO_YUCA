@@ -77,6 +77,10 @@ export class DashboardMainComponent implements OnInit {
     this.cargarPerfiles();
   }
 
+  irAlMapa(): void {
+    this.router.navigate(['./mapa']);
+  }
+
   abrirDetalle(perfil: Perfil): void {
     this.perfilSeleccionado = { ...perfil };
     this.imagenPreview = null;

@@ -12,9 +12,10 @@ import { StandService, Stand } from '../../../core/services/stand.service';
 })
 export class MapaSvg implements OnInit {
   sectores = [
-    { id: 1, nombre: 'Sector A - Artistas' },
-    { id: 2, nombre: 'Sector B - Emprendedores' },
-    { id: 3, nombre: 'Sector C - Comida' }
+    { id: 1, nombre: 'Salón de Yuquin' },
+    { id: 2, nombre: 'Salón de Yuca' },
+    { id: 3, nombre: 'Patio de Info-chan' },
+    { id: 4, nombre: 'Patio de Confetti' }
   ];
   sectorActualId: number = 1;
   stands: Stand[] = [];
@@ -113,25 +114,37 @@ export class MapaSvg implements OnInit {
 
   guardarLayout(): void {
     const layoutStands = this.stands.map(s => ({
-      id: s.id,
-      posicionX: s.posicionX,
-      posicionY: s.posicionY,
-      ancho: s.ancho,
-      alto: s.alto,
-      rotacion: s.rotacion
+      id: Number(s.id),
+      posicionX: Number(s.posicionX),
+      posicionY: Number(s.posicionY),
+      ancho: Number(s.ancho),
+      alto: Number(s.alto),
+      rotacion: Number(s.rotacion)
     }));
 
     this.standService.updateLayout(this.sectorActualId, layoutStands).subscribe({
       next: () => alert('Layout guardado exitosamente'),
-      error: (err) => alert('Error al guardar: ' + err.error.message)
+      error: (err) => alert('Error al guardar: ' + (err.error?.message || err.message))
     });
   }
 
   actualizarStandSeleccionado(): void {
     if (!this.standSeleccionado) return;
-    this.standService.updateStand(this.standSeleccionado.id, this.standSeleccionado).subscribe({
+
+    // Forzar conversión a número para evitar que se envíen como string
+    const standClean = {
+      ...this.standSeleccionado,
+      precio: Number(this.standSeleccionado.precio),
+      ancho: Number(this.standSeleccionado.ancho),
+      alto: Number(this.standSeleccionado.alto),
+      rotacion: Number(this.standSeleccionado.rotacion),
+      posicionX: Number(this.standSeleccionado.posicionX),
+      posicionY: Number(this.standSeleccionado.posicionY)
+    };
+
+    this.standService.updateStand(standClean.id, standClean).subscribe({
       next: () => alert('Stand actualizado correctamente'),
-      error: (err) => alert(err.error.message)
+      error: (err) => alert(err.error?.message || 'Error al actualizar')
     });
   }
 }
