@@ -84,6 +84,26 @@
           <text x="90" y="575" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ENTRADA</text>
         </g>
 
+        <!-- Entrada y salida: Salón de Yuca -->
+        <g *ngIf="sectorActualId === 2" pointer-events="none">
+          <rect x="420" y="50" width="90" height="30" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
+            stroke-dasharray="4" rx="8" />
+          <text x="465" y="70" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">SALIDA</text>
+
+          <rect x="200" y="575" width="90" height="30" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
+            stroke-dasharray="4" rx="8" />
+          <text x="245" y="595" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ENTRADA</text>
+        </g>
+
+        <!-- Pasillo y salida: Patio de Info-chan -->
+        <g *ngIf="sectorActualId === 3" pointer-events="none">
+          <rect x="225" y="120" width="85" height="435" fill="#F3EEDD" stroke="#5C5046" stroke-width="2"
+            stroke-dasharray="6" rx="8" />
+          <text x="267" y="337" text-anchor="middle" transform="rotate(-90 267 337)"
+            class="text-sm font-bold fill-[#5C5046] select-none">PASILLO</text>
+          
+        </g>
+
         <!-- Stands (dinámicos y arrastrables) -->
         <g *ngFor="let stand of stands"
           [attr.transform]="'translate(' + stand.posicionX + ',' + stand.posicionY + ') rotate(' + stand.rotacion + ')'"

@@ -7,6 +7,17 @@ interface CategoriaLeyenda {
   color: string;
 }
 
+interface Limites {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+// Zoom permitido respecto a la vista "ver todo"
+const ZOOM_MIN_REL = 0.9;
+const ZOOM_MAX_REL = 3;
+
 @Component({
   selector: 'app-mapa-mesas',
   standalone: true,
@@ -21,12 +32,22 @@ export class MapaMesasComponent {
   readonly sectorActivo = computed(() => this.sectores()[this.sectorIdx()] ?? null);
   readonly stands = computed(() => this.sectorActivo()?.stands ?? []);
 
+  // En celular, por defecto el dedo baja la página; con la mano activa mueve el mapa
+  readonly moverMapa = signal(false);
+
+  // Elementos fijos del plano (iguales a los del editor de administración)
+  private readonly nombreSector = computed(() => (this.sectorActivo()?.nombre ?? '').toLowerCase());
+  readonly mostrarEntrada = computed(() => this.nombreSector().includes('yuquin'));
+  readonly mostrarPatio = computed(() => this.nombreSector().includes('confet'));
+  readonly mostrarYuca = computed(() => this.nombreSector().includes('yuca'));
+  readonly mostrarInfo = computed(() => this.nombreSector().includes('info'));
+
   // Plano original (en pantallas medianas se abre y cierra con un botón)
   readonly mostrarPlano = signal(false);
   readonly planoUrl = computed(() => this.planoDe(this.sectorActivo()?.nombre ?? ''));
 
   // Categorías que realmente hay en el sector activo (para la leyenda)
-readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
+  readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
     const claves = new Set<string>(this.stands().map((m) => m.categoria));
     const orden = ['ILUSTRADORES', 'EMPRENDEDORES', 'COMIDA'];
     return orden
@@ -38,6 +59,33 @@ readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
   readonly tx = signal(0);
   readonly ty = signal(0);
   readonly transform = computed(() => `translate(${this.tx()} ${this.ty()}) scale(${this.k()})`);
+
+  // Escala de la vista "ver todo": sirve de base para los límites del zoom
+  private kBase = 1;
+
+  // Área que ocupa todo el contenido del sector (mesas + elementos fijos)
+  private readonly limites = computed<Limites | null>(() => {
+    const lista = this.stands();
+    if (lista.length === 0) return null;
+    let minX = Math.min(...lista.map((m) => m.x));
+    let minY = Math.min(...lista.map((m) => m.y));
+    let maxX = Math.max(...lista.map((m) => m.x + m.ancho));
+    let maxY = Math.max(...lista.map((m) => m.y + m.alto));
+
+    const incluir = (x1: number, y1: number, x2: number, y2: number) => {
+      minX = Math.min(minX, x1);
+      minY = Math.min(minY, y1);
+      maxX = Math.max(maxX, x2);
+      maxY = Math.max(maxY, y2);
+    };
+
+    if (this.mostrarEntrada()) incluir(50, 550, 130, 590);
+    if (this.mostrarPatio()) incluir(40, 40, 490, 580);
+    if (this.mostrarYuca()) incluir(200, 50, 510, 605);
+    if (this.mostrarInfo()) incluir(225, 120, 310, 555);
+
+    return { minX, minY, maxX, maxY };
+  });
 
   private readonly svgRef = viewChild<ElementRef<SVGSVGElement>>('svg');
 
@@ -57,10 +105,15 @@ readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
 
   cambiarSector(i: number): void {
     this.sectorIdx.set(i);
+    this.mostrarPlano.set(false);
   }
 
   togglePlano(): void {
     this.mostrarPlano.update((v) => !v);
+  }
+
+  alternarMover(): void {
+    this.moverMapa.update((v) => !v);
   }
 
   // ───────────── Plano original ─────────────
@@ -78,21 +131,20 @@ readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
 
   ajustar(): void {
     const svg = this.svgRef()?.nativeElement;
-    const lista = this.stands();
-    if (!svg || lista.length === 0) return;
+    const lim = this.limites();
+    if (!svg || !lim) return;
 
     const caja = svg.getBoundingClientRect();
     if (caja.width === 0 || caja.height === 0) return;
 
     const margen = 20;
-    const minX = Math.min(...lista.map((m) => m.x)) - margen;
-    const minY = Math.min(...lista.map((m) => m.y)) - margen;
-    const maxX = Math.max(...lista.map((m) => m.x + m.ancho)) + margen;
-    const maxY = Math.max(...lista.map((m) => m.y + m.alto)) + margen;
-    const ancho = maxX - minX;
-    const alto = maxY - minY;
+    const minX = lim.minX - margen;
+    const minY = lim.minY - margen;
+    const ancho = lim.maxX + margen - minX;
+    const alto = lim.maxY + margen - minY;
 
-    const nk = Math.min(8, Math.max(0.05, Math.min(caja.width / ancho, caja.height / alto)));
+    const nk = Math.max(0.05, Math.min(caja.width / ancho, caja.height / alto));
+    this.kBase = nk;
     this.k.set(nk);
     this.tx.set((caja.width - ancho * nk) / 2 - minX * nk);
     this.ty.set((caja.height - alto * nk) / 2 - minY * nk);
@@ -107,11 +159,31 @@ readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
 
   private zoomEn(px: number, py: number, factor: number): void {
     const actual = this.k();
-    const nuevo = Math.min(10, Math.max(0.05, actual * factor));
+    const nuevo = Math.min(this.kBase * ZOOM_MAX_REL, Math.max(this.kBase * ZOOM_MIN_REL, actual * factor));
     const razon = nuevo / actual;
     this.tx.set(px - (px - this.tx()) * razon);
     this.ty.set(py - (py - this.ty()) * razon);
     this.k.set(nuevo);
+    this.limitarArrastre();
+  }
+
+  // Evita que el mapa se pierda de vista: siempre queda una parte visible
+  private limitarArrastre(): void {
+    const svg = this.svgRef()?.nativeElement;
+    const lim = this.limites();
+    if (!svg || !lim) return;
+    const caja = svg.getBoundingClientRect();
+    const k = this.k();
+    const mx = Math.min(80, caja.width * 0.25);
+    const my = Math.min(80, caja.height * 0.25);
+
+    const txMin = mx - lim.maxX * k;
+    const txMax = caja.width - mx - lim.minX * k;
+    const tyMin = my - lim.maxY * k;
+    const tyMax = caja.height - my - lim.minY * k;
+
+    this.tx.set(Math.min(txMax, Math.max(txMin, this.tx())));
+    this.ty.set(Math.min(tyMax, Math.max(tyMin, this.ty())));
   }
 
   // ───────────── Mouse y táctil ─────────────
@@ -149,6 +221,7 @@ readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
       if (this.movido) {
         this.tx.update((v) => v + dx);
         this.ty.update((v) => v + dy);
+        this.limitarArrastre();
       }
     } else if (this.punteros.size === 2) {
       const svg = this.svgRef()?.nativeElement;
@@ -186,8 +259,9 @@ readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
     this.seleccionar.emit(m);
   }
 
+  // Igual que el editor: la mesa gira sobre su esquina superior izquierda
   rotar(m: MesaMapa): string {
-    return `rotate(${m.rotacion || 0} ${m.x + m.ancho / 2} ${m.y + m.alto / 2})`;
+    return `rotate(${m.rotacion || 0} ${m.x} ${m.y})`;
   }
 
   // Las mesas altas y angostas llevan el código girado para que se lea completo
