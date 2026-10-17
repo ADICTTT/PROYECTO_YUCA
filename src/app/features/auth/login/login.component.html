@@ -44,16 +44,26 @@
         <label for="password" class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-2">
           Contraseña
         </label>
-        <input
-          id="password"
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          required
-          autocomplete="current-password"
-          placeholder="••••••••"
-          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-5 py-3.5 text-[#2C221E] placeholder-[#5C5046]/40 focus:outline-none focus:border-[#E85A4F] transition text-base"
-        />
+        <div class="relative">
+          <input
+            id="password"
+            [type]="verPassword() ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl pl-5 pr-14 py-3.5 text-[#2C221E] placeholder-[#5C5046]/40 focus:outline-none focus:border-[#E85A4F] transition text-base"
+          />
+          <button
+            type="button"
+            (click)="alternarVer()"
+            [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            class="absolute inset-y-0 right-0 w-14 grid place-items-center text-[#5C5046] cursor-pointer"
+          >
+            <i class="fa-solid" [class.fa-eye]="!verPassword()" [class.fa-eye-slash]="verPassword()"></i>
+          </button>
+        </div>
       </div>
 
       <button

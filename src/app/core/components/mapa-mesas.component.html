@@ -1,0 +1,138 @@
+<div class="w-full">
+  <!-- Título del sector (siempre visible) -->
+  @if (sectorActivo(); as sa) {
+    <h2 class="text-xl sm:text-2xl font-black text-[#2C221E] uppercase mb-3">{{ sa.nombre }}</h2>
+  }
+
+  @if (sectores().length > 1) {
+    <div class="flex flex-wrap gap-2 mb-3">
+      @for (s of sectores(); track s.id; let i = $index) {
+        <button
+          type="button"
+          (click)="cambiarSector(i)"
+          class="px-4 py-2 rounded-2xl border-2 border-[#2C221E] text-xs font-black uppercase transition-all"
+          [class]="i === sectorIdx()
+            ? 'bg-[#E85A4F] text-white shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]'
+            : 'bg-white text-[#2C221E]'"
+        >
+          {{ s.nombre }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (planoUrl()) {
+    <button
+      type="button"
+      (click)="togglePlano()"
+      class="xl:hidden mb-3 px-4 py-2 rounded-2xl border-2 border-[#2C221E] bg-white text-[#2C221E] text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]"
+    >
+      <i class="fa-solid fa-map mr-2"></i>
+      @if (mostrarPlano()) { Ocultar plano original } @else { Ver plano original }
+    </button>
+  }
+
+  <div class="xl:grid xl:grid-cols-[1fr_15rem] xl:gap-4 xl:items-start">
+    <!-- Mapa interactivo -->
+    <div>
+      <div class="relative bg-[#FFFDF5] border-4 border-[#2C221E] rounded-[2rem] overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+        <svg
+          #svg
+          class="w-full block select-none"
+          style="height: 65vh; touch-action: none; cursor: grab;"
+          (pointerdown)="onDown($event)"
+          (pointermove)="onMove($event)"
+          (pointerup)="onUp($event)"
+          (pointercancel)="onUp($event)"
+          (pointerleave)="onUp($event)"
+          (wheel)="onWheel($event)"
+        >
+          <g [attr.transform]="transform()">
+            @for (m of stands(); track m.id) {
+              <g
+                [attr.transform]="rotar(m)"
+                (click)="clickMesa(m)"
+                [style.cursor]="m.estado === 'OCUPADO' ? 'not-allowed' : 'pointer'"
+              >
+                <rect
+                  [attr.x]="m.x"
+                  [attr.y]="m.y"
+                  [attr.width]="m.ancho"
+                  [attr.height]="m.alto"
+                  rx="4"
+                  [attr.fill]="relleno(m)"
+                  [attr.stroke]="borde(m)"
+                  [attr.stroke-width]="m.id === seleccionadaId() ? 4 : 2"
+                  vector-effect="non-scaling-stroke"
+                />
+                <text
+                  [attr.x]="m.x + m.ancho / 2"
+                  [attr.y]="m.y + m.alto / 2"
+                  [attr.transform]="rotarTexto(m)"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  font-weight="800"
+                  [attr.font-size]="tamanoTexto(m)"
+                  [attr.fill]="colorTexto(m)"
+                  pointer-events="none"
+                >
+                  {{ m.codigo }}
+                </text>
+              </g>
+            }
+          </g>
+        </svg>
+
+        <div class="absolute top-3 right-3 flex flex-col gap-2">
+          <button type="button" (click)="zoomBoton(1.3)" aria-label="Acercar"
+            class="w-10 h-10 rounded-xl bg-white border-2 border-[#2C221E] text-[#2C221E] shadow-[2px_2px_0px_0px_rgba(44,34,30,1)]">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <button type="button" (click)="zoomBoton(1 / 1.3)" aria-label="Alejar"
+            class="w-10 h-10 rounded-xl bg-white border-2 border-[#2C221E] text-[#2C221E] shadow-[2px_2px_0px_0px_rgba(44,34,30,1)]">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <button type="button" (click)="ajustar()" aria-label="Ver todo"
+            class="w-10 h-10 rounded-xl bg-white border-2 border-[#2C221E] text-[#2C221E] shadow-[2px_2px_0px_0px_rgba(44,34,30,1)]">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Leyenda por categoría -->
+      <div class="flex flex-wrap gap-4 mt-3 text-xs font-black text-[#5C5046] uppercase">
+        @for (c of categoriasPresentes(); track c.clave) {
+          <span class="flex items-center gap-2">
+            <span class="inline-block w-4 h-4 rounded border-2 border-[#2C221E]" [style.background]="c.color"></span>
+            {{ c.nombre }}
+          </span>
+        }
+        <span class="flex items-center gap-2">
+          <span class="inline-block w-4 h-4 rounded border-2 border-[#9CA3AF] bg-[#D1D5DB]"></span>
+          Reservada
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="inline-block w-4 h-4 rounded border-2 border-[#2C221E] bg-[#7B8E3D]"></span>
+          Mi mesa
+        </span>
+      </div>
+    </div>
+
+    <!-- Plano original -->
+    @if (planoUrl(); as url) {
+      <div [class]="mostrarPlano() ? 'block mt-4 xl:mt-0' : 'hidden xl:block'">
+        <div class="bg-white border-4 border-[#2C221E] rounded-[2rem] p-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+          <p class="text-xs font-black text-[#5C5046] uppercase mb-2 text-center">Plano original</p>
+          <a [href]="url" target="_blank" rel="noopener" aria-label="Abrir el plano en grande">
+            <img
+              [src]="url"
+              [alt]="'Plano original de ' + sectorActivo()!.nombre"
+              class="w-full h-auto max-h-[70vh] object-contain rounded-2xl"
+            />
+          </a>
+          <p class="text-[10px] font-bold text-[#5C5046] text-center mt-2">Toca el plano para verlo en grande.</p>
+        </div>
+      </div>
+    }
+  </div>
+</div>

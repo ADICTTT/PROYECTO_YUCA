@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
+type CampoPassword = 'actual' | 'nueva' | 'confirmar';
+
 @Component({
   selector: 'app-mi-cuenta',
   standalone: true,
@@ -23,6 +25,17 @@ export class MiCuentaComponent {
 
   readonly error = signal('');
   readonly guardando = signal(false);
+
+  // Qué contraseñas se están mostrando (todas ocultas por defecto)
+  readonly verActual = signal(false);
+  readonly verNueva = signal(false);
+  readonly verConfirmar = signal(false);
+
+  alternarVer(campo: CampoPassword): void {
+    if (campo === 'actual') this.verActual.update((v) => !v);
+    else if (campo === 'nueva') this.verNueva.update((v) => !v);
+    else this.verConfirmar.update((v) => !v);
+  }
 
   guardar(): void {
     this.error.set('');

@@ -17,30 +17,51 @@
 
     <form (ngSubmit)="guardar()" class="space-y-4">
       <div>
-        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Contraseña actual</label>
-        <input type="password" [(ngModel)]="passwordActual" name="passwordActual" required
-          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+        <label for="passwordActual" class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Contraseña actual</label>
+        <div class="relative">
+          <input id="passwordActual" [type]="verActual() ? 'text' : 'password'" [(ngModel)]="passwordActual" name="passwordActual" required
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl pl-4 pr-12 py-3 focus:outline-none focus:border-[#E85A4F]" />
+          <button type="button" (click)="alternarVer('actual')"
+            [attr.aria-label]="verActual() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            class="absolute inset-y-0 right-0 w-12 grid place-items-center text-[#5C5046] cursor-pointer">
+            <i class="fa-solid" [class.fa-eye]="!verActual()" [class.fa-eye-slash]="verActual()"></i>
+          </button>
+        </div>
       </div>
 
       <div>
-        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Nuevo usuario (opcional)</label>
-        <input type="text" [(ngModel)]="nuevoNombreUsuario" name="nuevoNombreUsuario"
-            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+        <label for="nuevoNombreUsuario" class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Nuevo usuario (opcional)</label>
+        <input id="nuevoNombreUsuario" type="text" [(ngModel)]="nuevoNombreUsuario" name="nuevoNombreUsuario"
+          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
         <p class="text-[11px] font-semibold text-[#5C5046] mt-1">
-            Déjalo vacío para conservar tu usuario actual. Si lo cambias: letras, números, punto, guion y guion bajo (4 a 30).
+          Déjalo vacío para conservar tu usuario actual. Si lo cambias: letras, números, punto, guion y guion bajo (4 a 30).
         </p>
       </div>
 
       <div>
-        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Nueva contraseña</label>
-        <input type="password" [(ngModel)]="nuevaPassword" name="nuevaPassword" required
-          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+        <label for="nuevaPassword" class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Nueva contraseña</label>
+        <div class="relative">
+          <input id="nuevaPassword" [type]="verNueva() ? 'text' : 'password'" [(ngModel)]="nuevaPassword" name="nuevaPassword" required
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl pl-4 pr-12 py-3 focus:outline-none focus:border-[#E85A4F]" />
+          <button type="button" (click)="alternarVer('nueva')"
+            [attr.aria-label]="verNueva() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            class="absolute inset-y-0 right-0 w-12 grid place-items-center text-[#5C5046] cursor-pointer">
+            <i class="fa-solid" [class.fa-eye]="!verNueva()" [class.fa-eye-slash]="verNueva()"></i>
+          </button>
+        </div>
       </div>
 
       <div>
-        <label class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Confirmar contraseña</label>
-        <input type="password" [(ngModel)]="confirmar" name="confirmar" required
-          class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 focus:outline-none focus:border-[#E85A4F]" />
+        <label for="confirmar" class="block text-xs font-black text-[#5C5046] uppercase tracking-wide mb-1">Confirmar contraseña</label>
+        <div class="relative">
+          <input id="confirmar" [type]="verConfirmar() ? 'text' : 'password'" [(ngModel)]="confirmar" name="confirmar" required
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl pl-4 pr-12 py-3 focus:outline-none focus:border-[#E85A4F]" />
+          <button type="button" (click)="alternarVer('confirmar')"
+            [attr.aria-label]="verConfirmar() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            class="absolute inset-y-0 right-0 w-12 grid place-items-center text-[#5C5046] cursor-pointer">
+            <i class="fa-solid" [class.fa-eye]="!verConfirmar()" [class.fa-eye-slash]="verConfirmar()"></i>
+          </button>
+        </div>
       </div>
 
       <button type="submit" [disabled]="guardando()"
@@ -49,12 +70,11 @@
       </button>
     </form>
 
-    
     @if (!forzado) {
-        <a [routerLink]="rutaVolver"
-            class="block text-center w-full px-5 py-3 bg-white font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition">
-            Volver
-        </a>
+      <a [routerLink]="rutaVolver"
+        class="block text-center w-full px-5 py-3 bg-white font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition">
+        Volver
+      </a>
     }
   </div>
 </div>

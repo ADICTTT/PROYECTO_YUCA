@@ -12,6 +12,12 @@ export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'registro-artista', component: ArtistRegisterComponent },
   { path: 'login', component: LoginComponent },
+  {
+    // Pública: el propio componente decide qué mostrar (visitante, expositor, cerrado, mapa)
+    path: 'mesas',
+    loadComponent: () =>
+      import('./features/expositor/mesas/mesas.component').then(m => m.MesasComponent),
+  },
   
   // Rutas del Administrador (Protegidas)
   {

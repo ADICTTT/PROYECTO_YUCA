@@ -1,22 +1,26 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileService } from '@core/services/profile.service';
+import { EVENTO_ACTUAL } from '@core/config/evento.config';
+
+const MAX_FOTO_BYTES = 5 * 1024 * 1024;
 
 @Component({
   selector: 'app-artist-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './artist-register.component.html',
 })
 export class ArtistRegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly profileService = inject(ProfileService);
 
+  readonly canalUrl = EVENTO_ACTUAL.whatsappCanal;
+
   isSubmitting = false;
   successMessage = false;
   errorMessage = '';
-  instagramEnviado = ''; // <--- Variable para conservar el Instagram registrado
+  instagramEnviado = '';
 
   imagenPreview: string | null = null;
   selectedFile: File | null = null;
@@ -37,17 +41,67 @@ export class ArtistRegisterComponent {
     portafolioUrl: [''],
   });
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      this.imagenPreview = URL.createObjectURL(file);
+  // ───────────── Foto ─────────────
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.errorMessage = '';
+    const tiposOk = ['image/jpeg', 'image/png'];
+    if (!tiposOk.includes(file.type)) {
+      this.errorMessage = 'La imagen debe ser JPG o PNG.';
+      input.value = '';
+      return;
+    }
+    if (file.size > MAX_FOTO_BYTES) {
+      this.errorMessage = 'La imagen no puede pesar más de 5 MB.';
+      input.value = '';
+      return;
+    }
+
+    if (this.imagenPreview) URL.revokeObjectURL(this.imagenPreview);
+    this.selectedFile = file;
+    this.imagenPreview = URL.createObjectURL(file);
+  }
+
+  // ───────────── Vista previa de la credencial ─────────────
+
+  categoriaSingular(): string {
+    switch (this.profileForm.get('categoria')?.value) {
+      case 'ILUSTRADORES':
+        return 'Ilustrador';
+      case 'EMPRENDEDORES':
+        return 'Emprendedor';
+      case 'COMIDA':
+        return 'Comida';
+      default:
+        return 'Categoría';
     }
   }
+
+  instagramVista(): string {
+    const ig = String(this.profileForm.get('instagram')?.value || '')
+      .trim()
+      .replace(/^@/, '');
+    return ig ? `@${ig}` : '@instagram';
+  }
+
+  campoInvalido(nombre: string): boolean {
+    const c = this.profileForm.get(nombre);
+    return !!c && c.invalid && c.touched;
+  }
+
+  // ───────────── Enviar ─────────────
 
   onSubmit(): void {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
+      return;
+    }
+    if (!this.selectedFile) {
+      this.errorMessage = 'Sube tu logo o foto para la credencial.';
       return;
     }
 
@@ -55,8 +109,6 @@ export class ArtistRegisterComponent {
     this.errorMessage = '';
 
     const val = this.profileForm.value;
-
-    // Guardamos el Instagram ingresado antes de limpiar el formulario
     this.instagramEnviado = val.instagram;
 
     const formData = new FormData();
@@ -77,16 +129,15 @@ export class ArtistRegisterComponent {
       formData.append('portafolioUrl', val.portafolioUrl.trim());
     }
 
-    if (this.selectedFile) {
-      formData.append('file', this.selectedFile);
-    }
+    formData.append('file', this.selectedFile);
 
     this.profileService.registerProfile(formData).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.successMessage = true;
         this.profileForm.reset();
-        this.imagenPreview = null; // Limpiamos la vista previa
+        if (this.imagenPreview) URL.revokeObjectURL(this.imagenPreview);
+        this.imagenPreview = null;
         this.selectedFile = null;
       },
       error: (err: any) => {
@@ -101,9 +152,8 @@ export class ArtistRegisterComponent {
   }
 
   getWhatsAppPostulacionLink(): string {
-    // Usamos la variable guardada para que mantenga el Instagram que escribió el usuario
     const instagramUser = this.instagramEnviado || '@artista';
-    const numeroOrganizador = '69006784'; 
+    const numeroOrganizador = '69006784';
     const mensaje = `Hola, soy ${instagramUser}, ya realicé mi postulación para la adquisición de un stand en la feria`;
     return `https://wa.me/${numeroOrganizador}?text=${encodeURIComponent(mensaje)}`;
   }

@@ -43,27 +43,7 @@
             ¡Perfil aprobado!
           </span>
 
-          <div class="bg-white border-2 border-[#2C221E] rounded-2xl p-4 text-xs space-y-2">
-            <p class="font-black text-sm">Reglas y condiciones de participación</p>
-            <p class="font-semibold text-[#5C5046]">
-              Una vez seleccionada la mesa, tendrás <strong>24 horas</strong> para realizar el pago.
-              Si el pago no se realiza dentro de ese plazo, la organización podrá liberar la mesa
-              y ponerla nuevamente disponible.
-            </p>
-            <label class="flex items-start gap-2 font-bold cursor-pointer">
-              <input type="checkbox" class="mt-0.5" [checked]="reglasAceptadas()" (change)="alternarReglas($event)" />
-              He leído y acepto las reglas y condiciones.
-            </label>
-          </div>
-<!--
-          <button
-            type="button"
-            (click)="seleccionarMesa()"
-            [disabled]="!reglasAceptadas()"
-            class="w-full px-5 py-3 bg-[#F4C453] text-[#2C221E] font-black text-sm rounded-2xl border-2 border-[#2C221E] transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Seleccionar mesa
-          </button>-->
+          
         </div>
       }
 

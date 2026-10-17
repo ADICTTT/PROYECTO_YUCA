@@ -1,58 +1,65 @@
-<div class="flex flex-col h-screen w-full">
-  <!-- Pestañas de Sectores -->
-  <div class="flex items-center bg-gray-100 p-3 gap-2 border-b border-gray-300">
-    <button *ngFor="let sector of sectores" (click)="cambiarSector(sector.id)" [class]="sector.id === sectorActualId 
-        ? 'bg-indigo-600 text-white font-medium px-4 py-2 rounded shadow transition' 
-        : 'bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded hover:bg-gray-300 transition'">
-      {{ sector.nombre }}
-    </button>
-    <button (click)="guardarLayout()"
-      class="ml-auto bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded shadow transition">
-      Guardar Cambios
+<div class="flex flex-col h-[calc(100vh-6rem)] w-full bg-[#FFF9E6]">
+  <!-- Barra superior -->
+  <div class="flex flex-wrap items-center gap-2 bg-[#FFF9E6] px-4 py-3 border-b-4 border-[#2C221E]">
+    <a routerLink="/admin/postulaciones"
+      class="bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+      <i class="fa-solid fa-arrow-left mr-2"></i>Volver al panel
+    </a>
+
+    <div class="flex flex-wrap items-center gap-2 ml-2">
+      <button *ngFor="let sector of sectores" type="button" (click)="cambiarSector(sector.id)"
+        [class]="sector.id === sectorActualId
+          ? 'bg-[#E85A4F] text-white font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]'
+          : 'bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2'">
+        {{ sector.nombre }}
+      </button>
+    </div>
+
+    <button type="button" (click)="guardarLayout()"
+      class="ml-auto bg-[#7B8E3D] text-white font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-5 py-2 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+      <i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios
     </button>
   </div>
 
-  <!-- Contenedor del Mapa y Panel -->
+  <!-- Leyenda -->
+  <div class="flex flex-wrap items-center gap-4 px-4 py-2 text-xs font-black uppercase text-[#5C5046]">
+    <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-white"></span>Ilustradores</span>
+    <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#F4C453]"></span>Emprendedores</span>
+    <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#D9C2F0]"></span>Comida</span>
+  </div>
+
+  <!-- Contenedor del mapa y panel -->
   <div class="flex flex-1 relative overflow-hidden">
-    <!-- Lienzo SVG Interactivo -->
-    <svg class="flex-1 h-full bg-gray-50 cursor-grab active:cursor-grabbing" (mousedown)="iniciarPan($event)"
+    <!-- Lienzo SVG interactivo -->
+    <svg class="flex-1 h-full bg-[#FFFDF5] cursor-grab active:cursor-grabbing" (mousedown)="iniciarPan($event)"
       (mousemove)="moverPan($event)" (mouseup)="detenerArrastre()" (wheel)="onWheel($event)">
 
       <g [attr.transform]="'translate(' + panX + ',' + panY + ') scale(' + zoom + ')'">
-        <!-- Patrón de Cuadrícula -->
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e5e7eb" stroke-width="1" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F1E3B8" stroke-width="1" />
           </pattern>
         </defs>
         <rect width="5000" height="5000" fill="url(#grid)" />
 
-        <!-- ========================================== -->
-        <!-- ELEMENTOS ESTRUCTURALES FIJOS POR AMBIENTE -->
-        <!-- ========================================== -->
-
-        <!-- Elementos estructurales para el Patio de Confetti (sectorId === 4) -->
+        <!-- Elementos estructurales: Patio de Confetti -->
         <g *ngIf="sectorActualId === 4">
-          <!-- Escenario -->
-          <rect x="360" y="40" width="130" height="70" fill="#e5e7eb" stroke="#374151" stroke-width="2" rx="4" />
-          <text x="425" y="75" text-anchor="middle" class="text-xs font-bold fill-gray-600 select-none">ESCENARIO</text>
+          <rect x="360" y="40" width="130" height="70" fill="#FFF9E6" stroke="#2C221E" stroke-width="3" rx="12" />
+          <text x="425" y="75" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ESCENARIO</text>
 
-          <!-- Zona de Piscina -->
           <path d="M 40 300 C 40 200, 160 180, 200 280 C 240 380, 220 580, 120 580 C 70 580, 40 450, 40 300 Z"
-            fill="#e0f2fe" stroke="#0284c7" stroke-width="2" stroke-dasharray="4" />
-          <text x="130" y="380" text-anchor="middle" class="text-sm font-bold fill-sky-700 select-none">PISCINA</text>
+            fill="#DDEFF3" stroke="#2C221E" stroke-width="3" stroke-dasharray="6" />
+          <text x="130" y="380" text-anchor="middle" class="text-sm font-bold fill-[#5C5046] select-none">PISCINA</text>
         </g>
 
-        <!-- Guía visual de entrada Salón de Yuquin (sectorId === 1) -->
+        <!-- Guía de entrada: Salón de Yuquin -->
         <g *ngIf="sectorActualId === 1">
-          <rect x="50" y="550" width="80" height="40" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"
-            stroke-dasharray="2" />
-          <text x="90" y="575" text-anchor="middle" class="text-xs fill-gray-500 select-none">ENTRADA</text>
+          <rect x="50" y="550" width="80" height="40" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
+            stroke-dasharray="4" rx="8" />
+          <text x="90" y="575" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ENTRADA</text>
         </g>
 
-        <!-- ========================================== -->
-        <!-- STANDS (Dinámicos y Arrastrables) -->
-        <!-- ========================================== -->
+        <!-- Stands (dinámicos y arrastrables) -->
         <g *ngFor="let stand of stands"
           [attr.transform]="'translate(' + stand.posicionX + ',' + stand.posicionY + ') rotate(' + stand.rotacion + ')'"
           (mousedown)="iniciarArrastreStand(stand, $event)" (click)="seleccionarStand(stand, $event)"
@@ -60,54 +67,53 @@
 
           <rect [attr.width]="stand.ancho" [attr.height]="stand.alto"
             [attr.fill]="obtenerColorCategoria(stand.categoria)"
-            [attr.stroke]="stand === standSeleccionado ? '#f97316' : '#374151'"
-            [attr.stroke-width]="stand === standSeleccionado ? '4' : '2'" rx="4" ry="4"
-            class="transition-colors shadow-sm" />
+            [attr.stroke]="stand === standSeleccionado ? '#E85A4F' : '#2C221E'"
+            [attr.stroke-width]="stand === standSeleccionado ? '5' : '3'" rx="8" ry="8" />
 
           <text [attr.x]="stand.ancho / 2" [attr.y]="stand.alto / 2" text-anchor="middle" dominant-baseline="central"
-            class="text-xs font-bold fill-gray-800 select-none">
+            class="text-xs font-black fill-[#2C221E] select-none">
             {{ stand.codigo }}
           </text>
         </g>
       </g>
     </svg>
 
-    <!-- Panel Lateral de Configuración -->
-    <div class="w-80 bg-white border-l border-gray-300 p-5 flex flex-col gap-3 shadow-lg z-10 overflow-y-auto"
+    <!-- Panel lateral de configuración -->
+    <div class="w-80 bg-white border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10 overflow-y-auto"
       *ngIf="standSeleccionado">
-      <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Configurar Stand</h3>
+      <h3 class="text-lg font-black text-[#2C221E] uppercase border-b-2 border-[#2C221E] pb-2 mb-1">Configurar mesa</h3>
 
-      <label class="text-sm font-semibold text-gray-600">Código:</label>
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Código</label>
       <input type="text" [(ngModel)]="standSeleccionado.codigo"
-        class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
 
-      <label class="text-sm font-semibold text-gray-600">Precio ($):</label>
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Precio (Bs)</label>
       <input type="number" [(ngModel)]="standSeleccionado.precio"
-        class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
 
-      <label class="text-sm font-semibold text-gray-600">Categoría:</label>
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Categoría</label>
       <select [(ngModel)]="standSeleccionado.categoria"
-        class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-        <option value="ILUSTRADORES">Ilustradores (Blanco)</option>
-        <option value="EMPRENDEDORES">Emprendedores (Amarillo)</option>
-        <option value="COMIDA">Comida (Lila)</option>
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        <option value="ILUSTRADORES">Ilustradores (blanco)</option>
+        <option value="EMPRENDEDORES">Emprendedores (amarillo)</option>
+        <option value="COMIDA">Comida (lila)</option>
       </select>
 
-      <label class="text-sm font-semibold text-gray-600">Ancho:</label>
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Ancho</label>
       <input type="number" [(ngModel)]="standSeleccionado.ancho"
-        class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
 
-      <label class="text-sm font-semibold text-gray-600">Alto:</label>
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Alto</label>
       <input type="number" [(ngModel)]="standSeleccionado.alto"
-        class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
 
-      <label class="text-sm font-semibold text-gray-600">Rotación (°):</label>
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Rotación (°)</label>
       <input type="number" [(ngModel)]="standSeleccionado.rotacion"
-        class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
 
-      <button (click)="actualizarStandSeleccionado()"
-        class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-2 rounded shadow transition">
-        Aplicar Cambios
+      <button type="button" (click)="actualizarStandSeleccionado()"
+        class="mt-4 bg-[#E85A4F] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-6 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+        Aplicar cambios
       </button>
     </div>
   </div>

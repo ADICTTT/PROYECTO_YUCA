@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { StandService, Stand } from '../../../core/services/stand.service';
 
 @Component({
   selector: 'app-mapa-svg',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mapa-svg.html',
   styleUrls: ['./mapa-svg.css']
 })
@@ -54,9 +55,9 @@ export class MapaSvg implements OnInit {
 
   obtenerColorCategoria(categoria: string): string {
     switch (categoria) {
-      case 'COMIDA': return '#e1bee7'; // Lila
-      case 'EMPRENDEDORES': return '#fff9c4'; // Amarillo
-      case 'ILUSTRADORES': default: return '#ffffff'; // Blanco
+      case 'COMIDA': return '#D9C2F0'; // Lila
+      case 'EMPRENDEDORES': return '#F4C453'; // Amarillo
+      case 'ILUSTRADORES': default: return '#FFFFFF'; // Blanco
     }
   }
 
@@ -91,7 +92,7 @@ export class MapaSvg implements OnInit {
       const gridSize = 10;
       const x = (event.clientX - this.dragOffsetX - this.panX) / this.zoom;
       const y = (event.clientY - this.dragOffsetY - this.panY) / this.zoom;
-      
+
       this.standArrastrando.posicionX = Math.round(x / gridSize) * gridSize;
       this.standArrastrando.posicionY = Math.round(y / gridSize) * gridSize;
     }

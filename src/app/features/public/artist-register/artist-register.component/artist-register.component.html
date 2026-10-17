@@ -1,168 +1,206 @@
-<div class="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-4xl mx-auto w-full space-y-8">
-    
+<div class="min-h-screen bg-[#FFF9E6] text-[#2C221E] py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto w-full space-y-8">
+
     <!-- Encabezado -->
     <div class="text-center space-y-2">
-      <span class="text-xs font-bold tracking-widest text-rose-500 uppercase">
-        Convocatoria Abierta
+      <span class="text-xs font-black tracking-widest text-[#E85A4F] uppercase">
+        Convocatoria abierta
       </span>
-      <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-        Formulario de Pre-registro
+      <h1 class="text-3xl sm:text-4xl font-black text-[#2C221E] uppercase">
+        Formulario de pre-registro
       </h1>
-      <p class="text-slate-500 text-sm sm:text-base">
-        Registra tu perfil de artista para postularte a los eventos y reservar tu stand.
+      <p class="text-[#5C5046] font-bold text-sm sm:text-base">
+        Registra tu perfil para postularte al Yukawaii Fest y reservar tu mesa.
       </p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      
-      <!-- Formulario -->
-      <div class="lg:col-span-7 bg-white border border-rose-100 p-6 sm:p-8 rounded-3xl shadow-xl shadow-rose-500/5 space-y-6">
-        
-       
 
-        <div *ngIf="errorMessage" class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm">
-          {{ errorMessage }}
-        </div>
+      <!-- Formulario -->
+      <div class="lg:col-span-7 bg-white border-4 border-[#2C221E] p-6 sm:p-8 rounded-[2rem] shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] space-y-6">
+
+        @if (errorMessage) {
+          <div class="p-4 bg-[#FFF9E6] border-2 border-[#E85A4F] rounded-2xl text-[#E85A4F] text-sm font-black">
+            {{ errorMessage }}
+          </div>
+        }
 
         <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-4">
-          
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Nombre Real *</label>
+              <label for="nombreReal" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Nombre real *</label>
               <input
+                id="nombreReal"
                 type="text"
                 formControlName="nombreReal"
                 placeholder="Ej. Juan Pérez"
-                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
+                class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] placeholder-[#5C5046]/50 focus:outline-none focus:border-[#E85A4F] text-sm"
               />
+              @if (campoInvalido('nombreReal')) {
+                <p class="mt-1 text-xs font-black text-[#E85A4F]">Escribe tu nombre (mínimo 3 letras).</p>
+              }
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Celular / WhatsApp *</label>
+              <label for="celular" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Celular / WhatsApp *</label>
               <input
-                type="text"
+                id="celular"
+                type="tel"
                 formControlName="celular"
                 placeholder="Ej. 71234567"
-                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
+                class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] placeholder-[#5C5046]/50 focus:outline-none focus:border-[#E85A4F] text-sm"
               />
+              @if (campoInvalido('celular')) {
+                <p class="mt-1 text-xs font-black text-[#E85A4F]">Escribe tu celular.</p>
+              }
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Nombre Comercial *</label>
+              <label for="nombreComercial" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Nombre comercial *</label>
               <input
+                id="nombreComercial"
                 type="text"
                 formControlName="nombreComercial"
                 placeholder="Ej. ArtStudio"
-                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
+                class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] placeholder-[#5C5046]/50 focus:outline-none focus:border-[#E85A4F] text-sm"
               />
+              @if (campoInvalido('nombreComercial')) {
+                <p class="mt-1 text-xs font-black text-[#E85A4F]">Escribe tu nombre comercial.</p>
+              }
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Categoría *</label>
+              <label for="categoria" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Categoría *</label>
               <select
+                id="categoria"
                 formControlName="categoria"
-                class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
+                class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F] text-sm"
               >
-                <option value="" disabled selected class="text-slate-400">Selecciona una categoría</option>
-                <option *ngFor="let cat of categories" [value]="cat.value">
-                  {{ cat.label }}
-                </option>
+                <option value="" disabled>Selecciona una categoría</option>
+                @for (cat of categories; track cat.value) {
+                  <option [value]="cat.value">{{ cat.label }}</option>
+                }
               </select>
+              @if (campoInvalido('categoria')) {
+                <p class="mt-1 text-xs font-black text-[#E85A4F]">Elige una categoría.</p>
+              }
             </div>
           </div>
 
-          <!-- FOTO DE PERFIL / LOGO -->
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Logo * (se usará en la credencial)</label>
-            <div class="flex items-center gap-3 bg-slate-50/50 border border-slate-200 rounded-2xl p-2">
-              <label class="cursor-pointer bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm">
+          <!-- Logo / foto -->
+          <div>
+            <label class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">
+              Logo o foto * (se usa en tu credencial)
+            </label>
+            <div class="flex items-center gap-3 bg-white border-2 border-[#F4C453] rounded-2xl p-2">
+              <label class="cursor-pointer bg-[#E85A4F] text-white font-black uppercase px-4 py-2 rounded-xl text-xs border-2 border-[#2C221E] shadow-[2px_2px_0px_0px_rgba(44,34,30,1)]">
                 Seleccionar archivo
-                <input type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden" />
+                <input type="file" (change)="onFileSelected($event)" accept="image/png,image/jpeg" class="hidden" />
               </label>
-              <span class="text-xs text-slate-500 truncate max-w-[200px]">
+              <span class="text-xs font-bold text-[#5C5046] truncate max-w-[200px]">
                 {{ selectedFile ? selectedFile.name : 'Ningún archivo seleccionado' }}
               </span>
             </div>
+            <p class="mt-1 text-xs font-bold text-[#5C5046]">JPG o PNG, máximo 5 MB.</p>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Usuario de Instagram *</label>
+            <label for="instagram" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Usuario de Instagram *</label>
             <input
+              id="instagram"
               type="text"
               formControlName="instagram"
-              placeholder="@artstudio.bo"
-              class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
+              placeholder="&#64;artstudio.bo"
+              class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] placeholder-[#5C5046]/50 focus:outline-none focus:border-[#E85A4F] text-sm"
             />
+            @if (campoInvalido('instagram')) {
+              <p class="mt-1 text-xs font-black text-[#E85A4F]">Escribe tu usuario de Instagram.</p>
+            }
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Descripción / Biografía (Opcional)</label>
+            <label for="descripcion" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Descripción / biografía (opcional)</label>
             <textarea
+              id="descripcion"
               formControlName="descripcion"
               rows="3"
               placeholder="Ej. Ilustrador digital y creador de stickers..."
-              class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl p-4 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm resize-none"
+              class="w-full bg-white border-2 border-[#F4C453] rounded-2xl p-4 font-bold text-[#2C221E] placeholder-[#5C5046]/50 focus:outline-none focus:border-[#E85A4F] text-sm resize-none"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Portafolio URL (Opcional)</label>
+            <label for="portafolioUrl" class="block text-xs font-black text-[#5C5046] uppercase mb-1.5">Portafolio URL (opcional)</label>
             <input
+              id="portafolioUrl"
               type="url"
               formControlName="portafolioUrl"
               placeholder="Ej. https://behance.net/tu_portafolio"
-              class="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:bg-white transition text-sm"
+              class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] placeholder-[#5C5046]/50 focus:outline-none focus:border-[#E85A4F] text-sm"
             />
           </div>
-
-
 
           <button
             type="submit"
             [disabled]="isSubmitting"
-            class="w-full bg-rose-400 hover:bg-rose-500 text-white font-bold py-4 px-6 rounded-2xl shadow-md shadow-rose-400/20 transition duration-300 disabled:opacity-50 cursor-pointer text-sm tracking-wide"
+            class="w-full bg-[#E85A4F] text-white font-black uppercase py-4 px-6 rounded-2xl border-2 border-[#2C221E] shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] disabled:opacity-60 cursor-pointer text-sm tracking-wide"
           >
-            {{ isSubmitting ? 'Enviando...' : 'Registrar Perfil y Solicitar Stand' }}
+            {{ isSubmitting ? 'Enviando...' : 'Registrar perfil y solicitar mesa' }}
           </button>
-           <!-- Mensajes de estado -->
-        <div *ngIf="successMessage" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm space-y-3">
-          <div>¡Solicitud enviada con éxito! Tu perfil se encuentra en estado <strong>EN_REVISION</strong>.</div>
-          <div>
-            <a [href]="getWhatsAppPostulacionLink()" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition shadow-sm">
-              <span>💬</span> Notificar por WhatsApp
-            </a>
-          </div>
-        </div>
+
+          @if (successMessage) {
+            <div class="p-5 bg-[#FFF9E6] border-2 border-[#2C221E] rounded-2xl space-y-4">
+              <p class="font-black text-[#2C221E]">
+                <i class="fa-solid fa-circle-check text-[#7B8E3D] mr-2"></i>
+                ¡Solicitud enviada! Tu perfil está en revisión.
+              </p>
+              <p class="text-sm font-bold text-[#5C5046]">
+                Cuando sea aprobado, te enviaremos tu usuario y contraseña por WhatsApp. Mientras tanto, sigue el canal.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <a [href]="getWhatsAppPostulacionLink()" target="_blank" rel="noopener"
+                  class="inline-block bg-[#E85A4F] text-white font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-5 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+                  <i class="fa-brands fa-whatsapp mr-2"></i>Notificar por WhatsApp
+                </a>
+                <a [href]="canalUrl" target="_blank" rel="noopener"
+                  class="inline-block bg-[#7B8E3D] text-white font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-5 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+                  <i class="fa-brands fa-whatsapp mr-2"></i>Seguir canal de Proyecto Yuca
+                </a>
+              </div>
+            </div>
+          }
+
         </form>
       </div>
 
-      <!-- Vista previa -->
-      <div class="lg:col-span-5 space-y-4 sticky top-6">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Vista previa de la credencial</h3>
-        
+      <!-- Vista previa de la credencial -->
+      <div class="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
+        <h3 class="text-xs font-black text-[#5C5046] uppercase tracking-wider text-center">
+          Vista previa de la credencial
+        </h3>
+
         <div class="bg-white border-2 border-emerald-800 rounded-3xl p-6 shadow-xl text-center space-y-4 relative overflow-hidden max-w-xs mx-auto">
-          <!-- Encabezado de la credencial -->
           <div class="text-[10px] font-black tracking-widest text-emerald-800 uppercase">
             YUKAWAIIFEST
           </div>
 
-          <!-- Píldora de Categoría -->
           <div>
             <span class="inline-block px-4 py-1.5 rounded-full bg-emerald-800 text-white font-black text-xs uppercase tracking-wide shadow-sm">
               {{ profileForm.get('categoria')?.value || 'CATEGORÍA' }}
             </span>
           </div>
 
-          <!-- Marco de la Fotografía -->
           <div class="w-32 h-32 mx-auto rounded-2xl border-2 border-slate-200 bg-slate-100 overflow-hidden shadow-inner flex items-center justify-center">
-            <img *ngIf="imagenPreview" [src]="imagenPreview" alt="Foto de perfil" class="w-full h-full object-cover" />
-            <span *ngIf="!imagenPreview" class="text-slate-400 text-xs font-semibold">Sin imagen</span>
+            @if (imagenPreview) {
+              <img [src]="imagenPreview" alt="Foto de perfil" class="w-full h-full object-cover" />
+            } @else {
+              <span class="text-slate-400 text-xs font-semibold">Sin imagen</span>
+            }
           </div>
 
-          <!-- Nombre Artístico / Comercial -->
           <div>
             <h4 class="font-black text-xl text-slate-900 uppercase tracking-tight">
               {{ profileForm.get('nombreComercial')?.value || 'NOMBRE ARTÍSTICO' }}
