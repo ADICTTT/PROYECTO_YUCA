@@ -33,6 +33,13 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMIN'] },
   },
+  {
+    path: 'admin/reservas',
+    loadComponent: () =>
+      import('./features/admin/reservas/reservas-admin.component').then(m => m.ReservasAdminComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
+  },
 
   // Rutas del Expositor (Protegidas)
   {

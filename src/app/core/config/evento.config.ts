@@ -19,5 +19,5 @@ export const EVENTO_ACTUAL: EventoInfo = {
   portada: 'images/afiche-yukawaii.jpg',
   whatsappCanal: 'https://whatsapp.com/channel/0029Vb20xSb4NVie43lyiB1z',
   // Formato wa.me: código de país (591) + número, sin + ni espacios
-  whatsappPagos: 'https://wa.me/59169006784',
+  whatsappPagos: 'https://wa.me/59162986390',
 };

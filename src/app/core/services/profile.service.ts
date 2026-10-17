@@ -24,7 +24,7 @@ export interface Perfil {
   instagram: string;
   descripcion?: string;
   portafolioUrl?: string;
-  estado: string; // 'PENDIENTE' | 'APROBADA' | 'RECHAZADA'
+  estado: string; // 'EN_REVISION' | 'APROBADO' | 'RECHAZADO'
   usuarioId?: string | null;
   fotoUrl?: string;
   credenciales?: { usuario: string; password: string } | null;
@@ -45,21 +45,27 @@ export class ProfileService {
 
   // URL base usando el environment (cambiará solo entre local y producción)
   private readonly baseUrl = `${environment.apiUrl}/perfiles`;
-  
+
   // URL específica para el registro público
   private readonly apiUrl = `${environment.apiUrl}/perfiles/publico/registro`;
 
   mio() {
     return this.http.get<Perfil>(`${this.baseUrl}/mio`);
   }
+
+  // El expositor cambia la foto de su propio perfil (FormData con el campo "file")
+  cambiarMiFoto(formData: FormData): Observable<Perfil> {
+    return this.http.patch<Perfil>(`${this.baseUrl}/mio/foto`, formData);
+  }
+
   // --- MÉTODO EXISTENTE (FUNCIONANDO) ---
-  registerProfile(formData: FormData ): Observable<any> {
+  registerProfile(formData: FormData): Observable<any> {
     return this.http.post(this.apiUrl, formData);
   }
 
-  // --- NUEVOS MÉTODOS PARA EL PANEL DE ADMINISTRACIÓN ---
+  // --- MÉTODOS PARA EL PANEL DE ADMINISTRACIÓN ---
 
-  // 1. Listar todos los perfiles (opcionalmente filtrados por estado: PENDIENTE, APROBADA, RECHAZADA)
+  // 1. Listar todos los perfiles (opcionalmente filtrados por estado)
   getPerfiles(estado?: string): Observable<Perfil[]> {
     let params = new HttpParams();
     if (estado) {

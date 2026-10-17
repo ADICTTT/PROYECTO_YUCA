@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { EVENTO_ACTUAL } from '../../../core/config/evento.config';
 import { MapaMesasComponent } from '../../../core/components/mapa-mesas.component';
 import { CompaneroSelectorComponent } from '../../../core/components/companero-selector/companero-selector.component';
+import { Perfil, ProfileService } from '../../../core/services/profile.service';
 import {
   CompaneroBusqueda,
   EstadoPerfilPublico,
@@ -19,6 +20,29 @@ import {
 
 type Vista = 'cargando' | 'visitante' | 'otro_rol' | 'error' | 'cerrado' | 'reglas' | 'mapa' | 'reserva';
 
+type ColorRegla = 'coral' | 'oliva' | 'amarillo';
+
+interface LineaRegla {
+  texto: string;
+  destacada: boolean;
+}
+
+interface ReglaBloque {
+  numero: number;
+  titulo: string;
+  color: ColorRegla;
+  lineas: LineaRegla[];
+}
+
+interface ReglasParseadas {
+  titulo: string;
+  introduccion: string[];
+  aviso: string;
+  reglas: ReglaBloque[];
+}
+
+const COLORES_REGLA: ColorRegla[] = ['coral', 'oliva', 'amarillo'];
+
 @Component({
   selector: 'app-mesas',
   standalone: true,
@@ -29,10 +53,12 @@ export class MesasComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly reservas = inject(ReservasService);
+  private readonly perfilesApi = inject(ProfileService);
 
   readonly vista = signal<Vista>('cargando');
   readonly mensajeError = signal('');
   readonly aviso = signal('');
+  readonly exito = signal('');
 
   // Visitante (sin sesión)
   celular = '';
@@ -51,6 +77,28 @@ export class MesasComponent implements OnInit {
   readonly companero = signal<CompaneroBusqueda | null>(null);
   readonly enviando = signal(false);
 
+  // Administrador: reserva en nombre de un perfil aprobado
+  readonly esAdmin = signal(false);
+  readonly perfilesAprobados = signal<Perfil[]>([]);
+  readonly cargandoPerfiles = signal(false);
+  readonly titular = signal<Perfil | null>(null);
+  readonly busquedaTitular = signal('');
+
+  readonly candidatos = computed(() => {
+    const m = this.mesa();
+    if (!m) return [];
+    const q = this.busquedaTitular().trim().toLowerCase();
+    return this.perfilesAprobados()
+      .filter((p) => p.categoria === m.categoria)
+      .filter(
+        (p) =>
+          !q ||
+          p.nombreComercial.toLowerCase().includes(q) ||
+          p.instagram.toLowerCase().includes(q),
+      )
+      .slice(0, 8);
+  });
+
   // Solo es true justo después de confirmar la reserva (no al recargar la página)
   readonly recienReservada = signal(false);
 
@@ -61,6 +109,14 @@ export class MesasComponent implements OnInit {
   );
   readonly canalPublico = EVENTO_ACTUAL.whatsappCanal;
 
+  readonly whatsappMenores = 'https://wa.me/59162986390?text=' + encodeURIComponent('Hola, soy menor de 17 años y quiero participar en el Yukawaii Fest. Mis padres están al tanto de mi participación.');
+
+  // Las reglas partidas en bloques para mostrarlas con colores
+  readonly reglasParseadas = computed<ReglasParseadas | null>(() => {
+    const texto = this.reglas()?.texto;
+    return texto ? this.parsearReglas(texto) : null;
+  });
+
   ngOnInit(): void {
     if (!this.auth.isAuthenticated()) {
       this.vista.set('visitante');
@@ -70,7 +126,13 @@ export class MesasComponent implements OnInit {
       this.router.navigate(['/mi-cuenta']);
       return;
     }
-    if (this.auth.getRol() !== 'EXPOSITOR') {
+    const rol = this.auth.getRol();
+    if (rol === 'ADMIN') {
+      this.esAdmin.set(true);
+      this.cargarAdmin();
+      return;
+    }
+    if (rol !== 'EXPOSITOR') {
       this.vista.set('otro_rol');
       return;
     }
@@ -103,9 +165,13 @@ export class MesasComponent implements OnInit {
     });
   }
 
-  // ───────────── Expositor: carga ─────────────
+  // ───────────── Carga ─────────────
 
   cargar(): void {
+    if (this.esAdmin()) {
+      this.cargarAdmin();
+      return;
+    }
     this.vista.set('cargando');
     this.aviso.set('');
     this.recienReservada.set(false);
@@ -120,6 +186,19 @@ export class MesasComponent implements OnInit {
           this.aviso.set('Tu reserva anterior ya no está activa. Puedes elegir otra mesa.');
         }
         this.cargarMapa();
+      },
+      error: (e) => this.fallar(e),
+    });
+  }
+
+  // El administrador ve el mapa completo aunque la selección esté cerrada
+  private cargarAdmin(): void {
+    this.vista.set('cargando');
+    this.aviso.set('');
+    this.reservas.getMapa().subscribe({
+      next: (m) => {
+        this.mapa.set(m);
+        this.vista.set('mapa');
       },
       error: (e) => this.fallar(e),
     });
@@ -177,6 +256,62 @@ export class MesasComponent implements OnInit {
 
   // ───────────── Reglas ─────────────
 
+  private parsearReglas(texto: string): ReglasParseadas {
+    const lineas = texto
+      .replace(/\r/g, '')
+      .split('\n')
+      .map((l) => l.trim());
+
+    let titulo = '';
+    let aviso = '';
+    const introduccion: string[] = [];
+    const reglas: ReglaBloque[] = [];
+    let actual: ReglaBloque | null = null;
+
+    for (const l of lineas) {
+      if (!l) continue;
+
+      // Inicio de una regla: "1. Propiedad Intelectual"
+      const m = /^(\d{1,2})\.\s+(.+)$/.exec(l);
+      if (m) {
+        actual = {
+          numero: Number(m[1]),
+          titulo: m[2],
+          color: COLORES_REGLA[reglas.length % COLORES_REGLA.length],
+          lineas: [],
+        };
+        reglas.push(actual);
+        continue;
+      }
+
+      // Dentro de una regla
+      if (actual) {
+        actual.lineas.push(this.armarLinea(l));
+        continue;
+      }
+
+      // Antes de la primera regla
+      if (!titulo) {
+        titulo = l;
+      } else if (this.esMayusculas(l) && l.length > 40) {
+        aviso = l;
+      } else {
+        introduccion.push(l);
+      }
+    }
+
+    return { titulo, introduccion, aviso, reglas };
+  }
+
+  private armarLinea(l: string): LineaRegla {
+    const destacada = l.length > 2 && l.startsWith('*') && l.endsWith('*');
+    return { texto: destacada ? l.slice(1, -1).trim() : l, destacada };
+  }
+
+  private esMayusculas(l: string): boolean {
+    return l === l.toUpperCase() && l !== l.toLowerCase();
+  }
+
   aceptarReglas(): void {
     if (this.aceptando()) return;
     this.aceptando.set(true);
@@ -196,20 +331,83 @@ export class MesasComponent implements OnInit {
 
   elegirMesa(m: MesaMapa): void {
     this.aviso.set('');
+    this.exito.set('');
     this.mesa.set(m);
     this.companero.set(null);
+    this.titular.set(null);
+    this.busquedaTitular.set('');
+    if (this.esAdmin()) this.cargarPerfilesAprobados();
   }
 
   cerrarPanel(): void {
     this.mesa.set(null);
     this.companero.set(null);
+    this.titular.set(null);
+    this.busquedaTitular.set('');
   }
 
   cerrarAvisoReservada(): void {
     this.recienReservada.set(false);
   }
 
-  // ───────────── Reservar ─────────────
+  // ───────────── Administrador ─────────────
+
+  private cargarPerfilesAprobados(): void {
+    if (this.perfilesAprobados().length > 0 || this.cargandoPerfiles()) return;
+    this.cargandoPerfiles.set(true);
+    this.perfilesApi.getPerfiles('APROBADO').subscribe({
+      next: (lista) => {
+        this.perfilesAprobados.set(lista);
+        this.cargandoPerfiles.set(false);
+      },
+      error: () => {
+        this.cargandoPerfiles.set(false);
+        this.aviso.set('No se pudo cargar la lista de perfiles aprobados.');
+      },
+    });
+  }
+
+  escribirTitular(valor: string): void {
+    this.busquedaTitular.set(valor);
+  }
+
+  elegirTitular(p: Perfil): void {
+    this.titular.set(p);
+    this.busquedaTitular.set('');
+  }
+
+  quitarTitular(): void {
+    this.titular.set(null);
+  }
+
+  confirmarAdmin(): void {
+    const m = this.mesa();
+    const t = this.titular();
+    if (!m || !t || this.enviando()) return;
+    this.enviando.set(true);
+    this.aviso.set('');
+    this.exito.set('');
+
+    this.reservas.crearManual({ standId: m.id, titularPerfilId: t.id }).subscribe({
+      next: () => {
+        this.enviando.set(false);
+        this.exito.set(`Reserva creada: mesa ${m.codigo} para ${t.nombreComercial}.`);
+        this.cerrarPanel();
+        this.recargarMapa();
+      },
+      error: (e) => {
+        const err = leerErrorApi(e);
+        this.enviando.set(false);
+        this.aviso.set(err.message);
+        if (err.code === 'MESA_TOMADA') {
+          this.cerrarPanel();
+          this.recargarMapa();
+        }
+      },
+    });
+  }
+
+  // ───────────── Reservar (expositor) ─────────────
 
   confirmar(): void {
     const m = this.mesa();

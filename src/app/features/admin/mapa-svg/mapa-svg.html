@@ -21,18 +21,43 @@
     </button>
   </div>
 
-  <!-- Leyenda -->
+  <!-- Leyenda y controles de vista -->
   <div class="flex flex-wrap items-center gap-4 px-4 py-2 text-xs font-black uppercase text-[#5C5046]">
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-white"></span>Ilustradores</span>
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#F4C453]"></span>Emprendedores</span>
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#D9C2F0]"></span>Comida</span>
+
+    <div class="flex items-center gap-2 ml-auto">
+      <button type="button" (click)="alejar()" aria-label="Alejar"
+        class="w-8 h-8 grid place-items-center bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
+        <i class="fa-solid fa-minus"></i>
+      </button>
+      <span class="min-w-[3.5rem] text-center text-[#2C221E]">{{ zoomPorcentaje }}%</span>
+      <button type="button" (click)="acercar()" aria-label="Acercar"
+        class="w-8 h-8 grid place-items-center bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+      <button type="button" (click)="ajustarVista()"
+        class="px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
+        <i class="fa-solid fa-expand mr-1"></i>Ajustar
+      </button>
+      <button *ngIf="standSeleccionado" type="button" (click)="quitarSeleccion()"
+        class="px-3 h-8 bg-[#E85A4F] text-white rounded-xl border-2 border-[#2C221E] cursor-pointer">
+        <i class="fa-solid fa-xmark mr-1"></i>Quitar selección
+      </button>
+    </div>
   </div>
+
+  <p class="px-4 pb-2 text-[11px] font-semibold text-[#5C5046]">
+    Rueda del mouse: bajar o subir. Ctrl + rueda: zoom. Arrastra el fondo para mover el plano. Clic en el fondo o Esc: quitar selección.
+  </p>
 
   <!-- Contenedor del mapa y panel -->
   <div class="flex flex-1 relative overflow-hidden">
     <!-- Lienzo SVG interactivo -->
     <svg class="flex-1 h-full bg-[#FFFDF5] cursor-grab active:cursor-grabbing" (mousedown)="iniciarPan($event)"
-      (mousemove)="moverPan($event)" (mouseup)="detenerArrastre()" (wheel)="onWheel($event)">
+      (mousemove)="moverPan($event)" (mouseup)="detenerArrastre()" (mouseleave)="cancelarArrastre()"
+      (wheel)="onWheel($event)">
 
       <g [attr.transform]="'translate(' + panX + ',' + panY + ') scale(' + zoom + ')'">
         <defs>
@@ -40,10 +65,10 @@
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F1E3B8" stroke-width="1" />
           </pattern>
         </defs>
-        <rect width="5000" height="5000" fill="url(#grid)" />
+        <rect data-fondo="true" x="-2000" y="-2000" width="7000" height="7000" fill="url(#grid)" />
 
         <!-- Elementos estructurales: Patio de Confetti -->
-        <g *ngIf="sectorActualId === 4">
+        <g *ngIf="sectorActualId === 4" pointer-events="none">
           <rect x="360" y="40" width="130" height="70" fill="#FFF9E6" stroke="#2C221E" stroke-width="3" rx="12" />
           <text x="425" y="75" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ESCENARIO</text>
 
@@ -53,7 +78,7 @@
         </g>
 
         <!-- Guía de entrada: Salón de Yuquin -->
-        <g *ngIf="sectorActualId === 1">
+        <g *ngIf="sectorActualId === 1" pointer-events="none">
           <rect x="50" y="550" width="80" height="40" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
             stroke-dasharray="4" rx="8" />
           <text x="90" y="575" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ENTRADA</text>
@@ -81,7 +106,13 @@
     <!-- Panel lateral de configuración -->
     <div class="w-80 bg-white border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10 overflow-y-auto"
       *ngIf="standSeleccionado">
-      <h3 class="text-lg font-black text-[#2C221E] uppercase border-b-2 border-[#2C221E] pb-2 mb-1">Configurar mesa</h3>
+      <div class="flex items-center justify-between border-b-2 border-[#2C221E] pb-2 mb-1">
+        <h3 class="text-lg font-black text-[#2C221E] uppercase">Configurar mesa</h3>
+        <button type="button" (click)="quitarSeleccion()" aria-label="Cerrar panel"
+          class="w-8 h-8 grid place-items-center text-[#2C221E] bg-white hover:bg-[#E85A4F] hover:text-white rounded-full border-2 border-[#2C221E] transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
 
       <label class="block text-xs font-black text-[#5C5046] uppercase">Código</label>
       <input type="text" [(ngModel)]="standSeleccionado.codigo"

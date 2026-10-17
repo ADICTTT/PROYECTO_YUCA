@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -22,6 +22,9 @@ export class MapaSvg implements OnInit {
   stands: Stand[] = [];
   standSeleccionado: Stand | null = null;
 
+  readonly ZOOM_MIN = 0.2;
+  readonly ZOOM_MAX = 3;
+
   zoom: number = 1;
   panX: number = 0;
   panY: number = 0;
@@ -33,6 +36,9 @@ export class MapaSvg implements OnInit {
   standArrastrando: Stand | null = null;
   dragOffsetX: number = 0;
   dragOffsetY: number = 0;
+
+  // Para distinguir un clic de un arrastre en el fondo
+  private movioElFondo = false;
 
   constructor(private standService: StandService) {}
 
@@ -66,28 +72,70 @@ export class MapaSvg implements OnInit {
     this.standSeleccionado = stand;
   }
 
+  quitarSeleccion(): void {
+    this.standSeleccionado = null;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.quitarSeleccion();
+  }
+
+  // ───────────── Zoom y desplazamiento ─────────────
+
   onWheel(event: WheelEvent): void {
     event.preventDefault();
-    const zoomFactor = 1.1;
-    if (event.deltaY < 0) {
-      this.zoom = Math.min(this.zoom * zoomFactor, 3);
+
+    // Ctrl + rueda: zoom. Rueda sola: desplazar el plano.
+    if (event.ctrlKey) {
+      const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+      this.zoom = Math.min(this.ZOOM_MAX, Math.max(this.ZOOM_MIN, this.zoom * factor));
     } else {
-      this.zoom = Math.max(this.zoom / zoomFactor, 0.5);
+      this.panX -= event.deltaX;
+      this.panY -= event.deltaY;
     }
   }
 
+  acercar(): void {
+    this.zoom = Math.min(this.ZOOM_MAX, this.zoom * 1.2);
+  }
+
+  alejar(): void {
+    this.zoom = Math.max(this.ZOOM_MIN, this.zoom / 1.2);
+  }
+
+  ajustarVista(): void {
+    this.zoom = 1;
+    this.panX = 0;
+    this.panY = 0;
+  }
+
+  get zoomPorcentaje(): number {
+    return Math.round(this.zoom * 100);
+  }
+
+  // ───────────── Arrastre del fondo ─────────────
+
   iniciarPan(event: MouseEvent): void {
-    if ((event.target as HTMLElement).tagName === 'svg') {
-      this.isDraggingCanvas = true;
-      this.startX = event.clientX - this.panX;
-      this.startY = event.clientY - this.panY;
-    }
+    const el = event.target as Element;
+    const esFondo = el.tagName === 'svg' || el.getAttribute('data-fondo') === 'true';
+    if (!esFondo) return;
+
+    this.isDraggingCanvas = true;
+    this.movioElFondo = false;
+    this.startX = event.clientX - this.panX;
+    this.startY = event.clientY - this.panY;
   }
 
   moverPan(event: MouseEvent): void {
     if (this.isDraggingCanvas) {
-      this.panX = event.clientX - this.startX;
-      this.panY = event.clientY - this.startY;
+      const nuevoX = event.clientX - this.startX;
+      const nuevoY = event.clientY - this.startY;
+      if (Math.abs(nuevoX - this.panX) > 2 || Math.abs(nuevoY - this.panY) > 2) {
+        this.movioElFondo = true;
+      }
+      this.panX = nuevoX;
+      this.panY = nuevoY;
     } else if (this.isDraggingStand && this.standArrastrando) {
       const gridSize = 10;
       const x = (event.clientX - this.dragOffsetX - this.panX) / this.zoom;
@@ -99,6 +147,17 @@ export class MapaSvg implements OnInit {
   }
 
   detenerArrastre(): void {
+    // Un clic en el fondo (sin arrastrar) quita la selección
+    if (this.isDraggingCanvas && !this.movioElFondo) {
+      this.standSeleccionado = null;
+    }
+    this.isDraggingCanvas = false;
+    this.isDraggingStand = false;
+    this.standArrastrando = null;
+  }
+
+  // Si el mouse sale del lienzo, se corta cualquier arrastre
+  cancelarArrastre(): void {
     this.isDraggingCanvas = false;
     this.isDraggingStand = false;
     this.standArrastrando = null;
@@ -112,6 +171,8 @@ export class MapaSvg implements OnInit {
     this.dragOffsetX = event.clientX - (stand.posicionX * this.zoom + this.panX);
     this.dragOffsetY = event.clientY - (stand.posicionY * this.zoom + this.panY);
   }
+
+  // ───────────── Guardado ─────────────
 
   guardarLayout(): void {
     const layoutStands = this.stands.map(s => ({
