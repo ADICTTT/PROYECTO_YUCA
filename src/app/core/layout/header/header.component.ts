@@ -21,6 +21,7 @@ export class HeaderComponent {
   private readonly rol = signal<string | null>(this.auth.getRol());
   readonly logueado = computed(() => !!this.rol());
   readonly esExpositor = computed(() => this.rol() === 'EXPOSITOR');
+  readonly esAdmin = computed(() => this.rol() === 'ADMIN');
 
   links = [
     { texto: 'Inicio', icono: 'fa-house', ruta: '/', fragmento: undefined as string | undefined },
