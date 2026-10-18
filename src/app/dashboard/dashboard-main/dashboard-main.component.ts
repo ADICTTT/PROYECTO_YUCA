@@ -16,17 +16,21 @@ import { RouterLink } from '@angular/router';
 })
 export class DashboardMainComponent implements OnInit {
   private profileService = inject(ProfileService);
-  
-  
+
   perfiles: Perfil[] = [];
+  perfilesFiltrados: Perfil[] = [];
   filtroEstado: string = '';
   perfilSeleccionado: Perfil | null = null;
   isModalOpen = false;
 
+  // Buscador y detección de perfiles repetidos
+  buscar = '';
+  infoRepetido = new Map<number, { total: number; esUltimo: boolean }>();
+
   // Propiedades nuevas para manejar la previsualización y el archivo seleccionado
   imagenPreview: string | null = null;
   selectedFile: File | null = null;
-    // Modal de credenciales
+  // Modal de credenciales
   credencialesModal: {
     usuario: string;
     password: string;
@@ -67,7 +71,10 @@ export class DashboardMainComponent implements OnInit {
 
   cargarPerfiles(): void {
     this.profileService.getPerfiles(this.filtroEstado).subscribe({
-      next: (data) => (this.perfiles = data),
+      next: (data) => {
+        this.perfiles = data;
+        this.aplicarFiltro();
+      },
       error: (err) => console.error('Error al cargar perfiles', err),
     });
   }
@@ -76,6 +83,98 @@ export class DashboardMainComponent implements OnInit {
     this.filtroEstado = estado;
     this.cargarPerfiles();
   }
+
+  // ---------- Buscador y repetidos ----------
+
+  private normalizar(valor: unknown): string {
+    return String(valor ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private soloDigitos(valor: unknown): string {
+    return String(valor ?? '').replace(/\D/g, '');
+  }
+
+  private claveInstagram(valor: unknown): string {
+    return this.normalizar(valor).replace(/[@\s]/g, '');
+  }
+
+  private clavesDe(p: Perfil): string[] {
+    const claves: string[] = [];
+    const cel = this.soloDigitos(p.celular);
+    if (cel.length >= 6) claves.push('c:' + cel);
+    const ig = this.claveInstagram(p.instagram);
+    if (ig) claves.push('i:' + ig);
+    const nom = this.normalizar(p.nombreComercial);
+    if (nom) claves.push('n:' + nom);
+    return claves;
+  }
+
+  aplicarFiltro(): void {
+    // 1) Detectar repetidos (comparten celular, Instagram o nombre comercial)
+    const porClave = new Map<string, number[]>();
+    for (const p of this.perfiles) {
+      for (const k of this.clavesDe(p)) {
+        const lista = porClave.get(k) ?? [];
+        lista.push(p.id);
+        porClave.set(k, lista);
+      }
+    }
+
+    this.infoRepetido = new Map();
+    for (const p of this.perfiles) {
+      const grupo = new Set<number>([p.id]);
+      for (const k of this.clavesDe(p)) {
+        for (const id of porClave.get(k) ?? []) grupo.add(id);
+      }
+      if (grupo.size > 1) {
+        const maxId = Math.max(...Array.from(grupo));
+        this.infoRepetido.set(p.id, { total: grupo.size, esUltimo: p.id === maxId });
+      }
+    }
+
+    // 2) Buscar
+    const q = this.normalizar(this.buscar).replace(/^@/, '');
+    const qDigitos = this.soloDigitos(this.buscar);
+
+    const lista = this.perfiles.filter((p) => {
+      if (!q) return true;
+      const texto = [
+        this.normalizar(p.nombreComercial),
+        this.normalizar(p.nombreReal),
+        this.claveInstagram(p.instagram),
+        this.normalizar(p.celular),
+      ].join(' ');
+      if (texto.includes(q)) return true;
+      return qDigitos.length >= 3 && this.soloDigitos(p.celular).includes(qDigitos);
+    });
+
+    // 3) Más reciente primero
+    this.perfilesFiltrados = [...lista].sort((a, b) => b.id - a.id);
+  }
+
+  limpiarBusqueda(): void {
+    this.buscar = '';
+    this.aplicarFiltro();
+  }
+
+  verRepetidos(p: Perfil): void {
+    // Prioridad: celular, luego Instagram, luego nombre comercial
+    const cel = this.soloDigitos(p.celular);
+    if (cel.length >= 6) {
+      this.buscar = cel;
+    } else if (p.instagram) {
+      this.buscar = this.claveInstagram(p.instagram);
+    } else {
+      this.buscar = p.nombreComercial;
+    }
+    this.aplicarFiltro();
+  }
+
+  // ---------- Resto del panel ----------
 
   irAlMapa(): void {
     this.router.navigate(['./mapa']);
@@ -106,7 +205,7 @@ export class DashboardMainComponent implements OnInit {
 
   guardarCambios(): void {
     if (!this.perfilSeleccionado) return;
-    
+
     const id = this.perfilSeleccionado.id;
 
     // Si se seleccionó una nueva foto, enviamos FormData; de lo contrario, enviamos el objeto JSON normal

@@ -52,10 +52,6 @@ export class MapaMesasComponent {
 
   // Elementos fijos del plano (iguales a los del editor de administración)
   private readonly nombreSector = computed(() => (this.sectorActivo()?.nombre ?? '').toLowerCase());
-  readonly mostrarEntrada = computed(() => this.nombreSector().includes('yuquin'));
-  readonly mostrarPatio = computed(() => this.nombreSector().includes('confet'));
-  readonly mostrarYuca = computed(() => this.nombreSector().includes('yuca'));
-  readonly mostrarInfo = computed(() => this.nombreSector().includes('info'));
 
   readonly claveSector = computed(() => {
     const n = this.nombreSector();
@@ -124,11 +120,7 @@ export class MapaMesasComponent {
       maxY = Math.max(maxY, y2);
     };
 
-    if (this.mostrarEntrada()) incluir(50, 550, 130, 590);
-    if (this.mostrarPatio()) incluir(40, 40, 490, 580);
-    if (this.mostrarYuca()) incluir(200, 50, 510, 605);
-    if (this.mostrarInfo()) incluir(225, 120, 310, 555);
-
+    
     return { minX, minY, maxX, maxY };
   });
 

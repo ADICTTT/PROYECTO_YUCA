@@ -15,6 +15,11 @@ import {
 
 type FiltroEstado = '' | EstadoReserva;
 
+interface AvisoLiberacion {
+  reserva: ReservaAdmin;
+  motivo: string;
+}
+
 @Component({
   selector: 'app-reservas-admin',
   standalone: true,
@@ -34,6 +39,9 @@ export class ReservasAdminComponent implements OnInit {
 
   readonly filtroEstado = signal<FiltroEstado>('');
   readonly busqueda = signal('');
+
+  // Ventana para avisar por WhatsApp que se liberó una mesa
+  readonly aviso = signal<AvisoLiberacion | null>(null);
 
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: '', etiqueta: 'Todas' },
@@ -137,16 +145,31 @@ export class ReservasAdminComponent implements OnInit {
   }
 
   liberar(r: ReservaAdmin): void {
-    const motivo = prompt(`Motivo para liberar la mesa ${r.stand.codigo} (reserva ${r.codigo}):`);
-    if (motivo === null) return;
-    if (motivo.trim().length < 3) {
+    const texto = prompt(
+      `Motivo para liberar la mesa ${r.stand.codigo} (reserva ${r.codigo}).\n` +
+        `Se le enviará por WhatsApp al artista:`,
+    );
+    if (texto === null) return;
+    const motivo = texto.trim();
+    if (motivo.length < 3) {
       this.error.set('Escribe un motivo para liberar la mesa.');
       return;
     }
-    this.ejecutar(r, this.api.liberar(r.id, motivo), `Mesa ${r.stand.codigo} liberada.`);
+    if (motivo.length > 200) {
+      this.error.set(`El motivo es muy largo (${motivo.length} caracteres). Máximo 200.`);
+      return;
+    }
+    this.ejecutar(r, this.api.liberar(r.id, motivo), `Mesa ${r.stand.codigo} liberada.`, () =>
+      this.aviso.set({ reserva: r, motivo }),
+    );
   }
 
-  private ejecutar(r: ReservaAdmin, peticion: ReturnType<ReservasService['marcarPagada']>, exito: string): void {
+  private ejecutar(
+    r: ReservaAdmin,
+    peticion: ReturnType<ReservasService['marcarPagada']>,
+    exito: string,
+    alExito?: () => void,
+  ): void {
     this.trabajando.set(r.id);
     this.error.set('');
     this.mensaje.set('');
@@ -154,6 +177,7 @@ export class ReservasAdminComponent implements OnInit {
       next: () => {
         this.trabajando.set(null);
         this.mensaje.set(exito);
+        alExito?.();
         this.cargar();
       },
       error: (e) => {
@@ -161,6 +185,34 @@ export class ReservasAdminComponent implements OnInit {
         this.error.set(leerErrorApi(e).message);
       },
     });
+  }
+
+  // ───────────── Aviso por WhatsApp ─────────────
+
+  puedeAvisar(r: ReservaAdmin): boolean {
+    return (r.estado === 'VENCIDA' || r.estado === 'CANCELADA') && !!r.titular;
+  }
+
+  avisar(r: ReservaAdmin): void {
+    const motivo = r.motivoLiberacion || 'Se venció el plazo de pago';
+    this.aviso.set({ reserva: r, motivo });
+  }
+
+  cerrarAviso(): void {
+    this.aviso.set(null);
+  }
+
+  mensajeLiberacion(p: PersonaReserva, a: AvisoLiberacion): string {
+    return (
+      `Hola ${p.nombreComercial}, te escribimos de Proyecto Yuca.\n\n` +
+      `Tu mesa ${a.reserva.stand.codigo} (reserva ${a.reserva.codigo}) fue liberada.\n` +
+      `Motivo: ${a.motivo}\n\n` +
+      `Si tienes dudas, respóndenos por este chat.`
+    );
+  }
+
+  whatsappAviso(p: PersonaReserva, a: AvisoLiberacion): string {
+    return `${this.whatsapp(p)}?text=${encodeURIComponent(this.mensajeLiberacion(p, a))}`;
   }
 
   // ───────────── Ayudas de vista ─────────────

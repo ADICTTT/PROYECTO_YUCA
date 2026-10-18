@@ -181,6 +181,12 @@
                     <i class="fa-solid fa-unlock mr-1"></i>Liberar mesa
                   </button>
                 }
+                @if (puedeAvisar(r)) {
+                  <button type="button" (click)="avisar(r)"
+                    class="bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2">
+                    <i class="fa-brands fa-whatsapp mr-1 text-[#7B8E3D]"></i>Avisar por WhatsApp
+                  </button>
+                }
               </div>
             </article>
           }
@@ -188,4 +194,51 @@
       }
     }
   </div>
+
+  <!-- Ventana: avisar por WhatsApp que se liberó la mesa -->
+  @if (aviso(); as a) {
+    <div class="fixed inset-0 bg-[#2C221E]/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div
+        class="bg-[#FFF9E6] rounded-[2rem] max-w-md w-full p-6 sm:p-8 space-y-4 border-4 border-[#2C221E] shadow-[6px_6px_0px_0px_rgba(44,34,30,1)]">
+        <div class="flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-[#7B8E3D] text-2xl"></i>
+          <h2 class="text-xl font-black text-[#2C221E]">Avisar al artista</h2>
+        </div>
+
+        <p class="text-xs font-semibold text-[#5C5046]">
+          Mesa <strong>{{ a.reserva.stand.codigo }}</strong> ({{ a.reserva.codigo }}). Se abrirá WhatsApp con el
+          mensaje ya escrito; solo tienes que enviarlo.
+        </p>
+
+        <div class="bg-white border-2 border-[#F4C453] rounded-2xl p-4 text-xs font-bold text-[#2C221E]">
+          <p class="text-[#5C5046] uppercase font-black mb-1">Motivo</p>
+          {{ a.motivo }}
+        </div>
+
+        <div class="space-y-2">
+          @if (a.reserva.titular; as t) {
+            <a [href]="whatsappAviso(t, a)" target="_blank" rel="noopener"
+              class="flex items-center justify-center gap-2 px-5 py-3 bg-[#7B8E3D] text-white font-black text-xs rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>Avisar a {{ t.nombreComercial }} (titular)</span>
+            </a>
+          }
+          @if (a.reserva.companero; as c) {
+            <a [href]="whatsappAviso(c, a)" target="_blank" rel="noopener"
+              class="flex items-center justify-center gap-2 px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E]">
+              <i class="fa-brands fa-whatsapp text-[#7B8E3D]"></i>
+              <span>Avisar a {{ c.nombreComercial }} (compañero)</span>
+            </a>
+          }
+        </div>
+
+        <div class="flex justify-end pt-2 border-t-2 border-[#2C221E]/15">
+          <button type="button" (click)="cerrarAviso()"
+            class="px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </section>
