@@ -1,5 +1,6 @@
 import { Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
 import { MesaMapa, SectorMapa } from '../services/reserva.service';
+import { PLANOS_RECT } from '../config/planos.config';
 
 interface CategoriaLeyenda {
   clave: string;
@@ -14,6 +15,13 @@ interface Limites {
   maxY: number;
 }
 
+interface RectPlano {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 // Zoom permitido respecto a la vista "ver todo"
 const ZOOM_MIN_REL = 0.9;
 const ZOOM_MAX_REL = 3;
@@ -26,6 +34,7 @@ const ZOOM_MAX_REL = 3;
 export class MapaMesasComponent {
   readonly sectores = input.required<SectorMapa[]>();
   readonly seleccionadaId = input<number | null>(null);
+  readonly permitirCalibrar = input(false);
   readonly seleccionar = output<MesaMapa>();
 
   readonly sectorIdx = signal(0);
@@ -35,6 +44,12 @@ export class MapaMesasComponent {
   // En celular, por defecto el dedo baja la página; con la mano activa mueve el mapa
   readonly moverMapa = signal(false);
 
+  // Plano de fondo
+  readonly verPlano = signal(true);
+  readonly calibrando = signal(false);
+  readonly opacidad = signal(0.5);
+  private readonly ajustes = signal<Record<string, RectPlano>>({});
+
   // Elementos fijos del plano (iguales a los del editor de administración)
   private readonly nombreSector = computed(() => (this.sectorActivo()?.nombre ?? '').toLowerCase());
   readonly mostrarEntrada = computed(() => this.nombreSector().includes('yuquin'));
@@ -42,9 +57,39 @@ export class MapaMesasComponent {
   readonly mostrarYuca = computed(() => this.nombreSector().includes('yuca'));
   readonly mostrarInfo = computed(() => this.nombreSector().includes('info'));
 
-  // Plano original (en pantallas medianas se abre y cierra con un botón)
-  readonly mostrarPlano = signal(false);
-  readonly planoUrl = computed(() => this.planoDe(this.sectorActivo()?.nombre ?? ''));
+  readonly claveSector = computed(() => {
+    const n = this.nombreSector();
+    if (n.includes('yuquin')) return 'yuquin';
+    if (n.includes('yuca')) return 'yuca';
+    if (n.includes('info')) return 'infochan';
+    if (n.includes('confet')) return 'confeti';
+    return '';
+  });
+
+  readonly planoUrl = computed(() => {
+    const c = this.claveSector();
+    return c ? `/images/planos/${c}.png` : null;
+  });
+
+  // Las guías dibujadas a mano solo se ven cuando el plano de fondo está apagado
+  readonly mostrarGuias = computed(() => !this.verPlano() || !this.planoUrl());
+
+  // Posición y tamaño del plano dentro del mapa
+  readonly rectPlano = computed<RectPlano>(() => {
+    const c = this.claveSector();
+    const guardado = this.ajustes()[c] ?? PLANOS_RECT[c];
+    if (guardado) return guardado;
+    const lim = this.limites();
+    if (!lim) return { x: 0, y: 0, w: 100, h: 100 };
+    const m = 30;
+    return { x: lim.minX - m, y: lim.minY - m, w: lim.maxX - lim.minX + m * 2, h: lim.maxY - lim.minY + m * 2 };
+  });
+
+  // Línea lista para copiar y pegar en el código
+  readonly textoCalibracion = computed(() => {
+    const r = this.rectPlano();
+    return `${this.claveSector()}: { x: ${r.x}, y: ${r.y}, w: ${r.w}, h: ${r.h} },`;
+  });
 
   // Categorías que realmente hay en el sector activo (para la leyenda)
   readonly categoriasPresentes = computed<CategoriaLeyenda[]>(() => {
@@ -105,26 +150,32 @@ export class MapaMesasComponent {
 
   cambiarSector(i: number): void {
     this.sectorIdx.set(i);
-    this.mostrarPlano.set(false);
-  }
-
-  togglePlano(): void {
-    this.mostrarPlano.update((v) => !v);
   }
 
   alternarMover(): void {
     this.moverMapa.update((v) => !v);
   }
 
-  // ───────────── Plano original ─────────────
+  alternarPlano(): void {
+    this.verPlano.update((v) => !v);
+  }
 
-  private planoDe(nombre: string): string | null {
-    const n = nombre.toLowerCase();
-    if (n.includes('yuquin')) return '/images/planos/yuquin.png';
-    if (n.includes('yuca')) return '/images/planos/yuca.png';
-    if (n.includes('info')) return '/images/planos/infochan.png';
-    if (n.includes('confet')) return '/images/planos/confeti.png';
-    return null;
+  alternarCalibrar(): void {
+    this.calibrando.update((v) => !v);
+    if (this.calibrando()) this.verPlano.set(true);
+  }
+
+  cambiarRect(campo: keyof RectPlano, valor: string): void {
+    const n = Number(valor);
+    if (!Number.isFinite(n)) return;
+    const c = this.claveSector();
+    const actual = this.rectPlano();
+    this.ajustes.update((a) => ({ ...a, [c]: { ...actual, [campo]: n } }));
+  }
+
+  cambiarOpacidad(valor: string): void {
+    const n = Number(valor);
+    if (Number.isFinite(n)) this.opacidad.set(Math.min(1, Math.max(0.1, n)));
   }
 
   // ───────────── Vista ─────────────

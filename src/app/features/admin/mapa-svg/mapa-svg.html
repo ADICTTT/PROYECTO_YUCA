@@ -1,4 +1,4 @@
-<div class="flex flex-col h-[calc(100vh-6rem)] w-full bg-[#FFF9E6]">
+<div class="flex flex-col w-full bg-[#FFF9E6]">
   <!-- Barra superior -->
   <div class="flex flex-wrap items-center gap-2 bg-[#FFF9E6] px-4 py-3 border-b-4 border-[#2C221E]">
     <a routerLink="/admin/postulaciones"
@@ -27,7 +27,7 @@
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#F4C453]"></span>Emprendedores</span>
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#D9C2F0]"></span>Comida</span>
 
-    <div class="flex items-center gap-2 ml-auto">
+    <div class="flex flex-wrap items-center gap-2 ml-auto">
       <button type="button" (click)="alejar()" aria-label="Alejar"
         class="w-8 h-8 grid place-items-center bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
         <i class="fa-solid fa-minus"></i>
@@ -41,6 +41,12 @@
         class="px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
         <i class="fa-solid fa-expand mr-1"></i>Ajustar
       </button>
+      <button *ngIf="planoUrl" type="button" (click)="alternarPlano()"
+        [class]="verPlano
+          ? 'px-3 h-8 bg-[#2C221E] text-white rounded-xl border-2 border-[#2C221E] cursor-pointer'
+          : 'px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer'">
+        <i class="fa-solid fa-map mr-1"></i>Plano
+      </button>
       <button *ngIf="standSeleccionado" type="button" (click)="quitarSeleccion()"
         class="px-3 h-8 bg-[#E85A4F] text-white rounded-xl border-2 border-[#2C221E] cursor-pointer">
         <i class="fa-solid fa-xmark mr-1"></i>Quitar selección
@@ -49,13 +55,17 @@
   </div>
 
   <p class="px-4 pb-2 text-[11px] font-semibold text-[#5C5046]">
-    Rueda del mouse: bajar o subir. Ctrl + rueda: zoom. Arrastra el fondo para mover el plano. Clic en el fondo o Esc: quitar selección.
+    Mueve las mesas sobre el plano y toca "Guardar cambios": los artistas verán el mismo plano con tus mesas encima. La rueda baja la página. Ctrl + rueda: zoom. Arrastra el fondo para mover de lado. Clic en el fondo o Esc: quitar selección. En celular se puede ver y hacer zoom con + y −; arrastrar mesas es solo en PC.
   </p>
 
   <!-- Contenedor del mapa y panel -->
-  <div class="flex flex-1 relative overflow-hidden">
-    <!-- Lienzo SVG interactivo -->
-    <svg class="flex-1 h-full bg-[#FFFDF5] cursor-grab active:cursor-grabbing" (mousedown)="iniciarPan($event)"
+  <div class="flex flex-col md:flex-row md:items-start relative">
+    <!-- Lienzo SVG interactivo: su altura cubre todo el largo del mapa -->
+    <svg #lienzo
+      class="w-full md:w-auto md:flex-1 bg-[#FFFDF5] cursor-grab active:cursor-grabbing"
+      [style.height.px]="alturaLienzo"
+      style="touch-action: pan-y;"
+      (mousedown)="iniciarPan($event)"
       (mousemove)="moverPan($event)" (mouseup)="detenerArrastre()" (mouseleave)="cancelarArrastre()"
       (wheel)="onWheel($event)">
 
@@ -67,42 +77,14 @@
         </defs>
         <rect data-fondo="true" x="-2000" y="-2000" width="7000" height="7000" fill="url(#grid)" />
 
-        <!-- Elementos estructurales: Patio de Confetti -->
-        <g *ngIf="sectorActualId === 4" pointer-events="none">
-          <rect x="360" y="40" width="130" height="70" fill="#FFF9E6" stroke="#2C221E" stroke-width="3" rx="12" />
-          <text x="425" y="75" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ESCENARIO</text>
-
-          <path d="M 40 300 C 40 200, 160 180, 200 280 C 240 380, 220 580, 120 580 C 70 580, 40 450, 40 300 Z"
-            fill="#DDEFF3" stroke="#2C221E" stroke-width="3" stroke-dasharray="6" />
-          <text x="130" y="380" text-anchor="middle" class="text-sm font-bold fill-[#5C5046] select-none">PISCINA</text>
-        </g>
-
-        <!-- Guía de entrada: Salón de Yuquin -->
-        <g *ngIf="sectorActualId === 1" pointer-events="none">
-          <rect x="50" y="550" width="80" height="40" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
-            stroke-dasharray="4" rx="8" />
-          <text x="90" y="575" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ENTRADA</text>
-        </g>
-
-        <!-- Entrada y salida: Salón de Yuca -->
-        <g *ngIf="sectorActualId === 2" pointer-events="none">
-          <rect x="420" y="50" width="90" height="30" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
-            stroke-dasharray="4" rx="8" />
-          <text x="465" y="70" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">SALIDA</text>
-
-          <rect x="200" y="575" width="90" height="30" fill="#FFF9E6" stroke="#5C5046" stroke-width="2"
-            stroke-dasharray="4" rx="8" />
-          <text x="245" y="595" text-anchor="middle" class="text-xs font-bold fill-[#5C5046] select-none">ENTRADA</text>
-        </g>
-
-        <!-- Pasillo y salida: Patio de Info-chan -->
-        <g *ngIf="sectorActualId === 3" pointer-events="none">
-          <rect x="225" y="120" width="85" height="435" fill="#F3EEDD" stroke="#5C5046" stroke-width="2"
-            stroke-dasharray="6" rx="8" />
-          <text x="267" y="337" text-anchor="middle" transform="rotate(-90 267 337)"
-            class="text-sm font-bold fill-[#5C5046] select-none">PASILLO</text>
-          
-        </g>
+        <!-- Plano original como fondo (las mesas van encima) -->
+        <image *ngIf="verPlano && planoUrl"
+          [attr.href]="planoUrl"
+          [attr.x]="rectPlano.x" [attr.y]="rectPlano.y"
+          [attr.width]="rectPlano.w" [attr.height]="rectPlano.h"
+          preserveAspectRatio="xMidYMid meet"
+          [attr.opacity]="opacidad"
+          pointer-events="none" />
 
         <!-- Stands (dinámicos y arrastrables) -->
         <g *ngFor="let stand of stands"
@@ -112,19 +94,23 @@
 
           <rect [attr.width]="stand.ancho" [attr.height]="stand.alto"
             [attr.fill]="obtenerColorCategoria(stand.categoria)"
+            [attr.fill-opacity]="verPlano ? 0.85 : 1"
             [attr.stroke]="stand === standSeleccionado ? '#E85A4F' : '#2C221E'"
             [attr.stroke-width]="stand === standSeleccionado ? '5' : '3'" rx="8" ry="8" />
 
-          <text [attr.x]="stand.ancho / 2" [attr.y]="stand.alto / 2" text-anchor="middle" dominant-baseline="central"
-            class="text-xs font-black fill-[#2C221E] select-none">
+          <text [attr.x]="stand.ancho / 2" [attr.y]="stand.alto / 2"
+            [attr.transform]="rotarTexto(stand)"
+            text-anchor="middle" dominant-baseline="central"
+            [attr.font-size]="tamanoTexto(stand)" font-weight="900" fill="#2C221E"
+            pointer-events="none" class="select-none">
             {{ stand.codigo }}
           </text>
         </g>
       </g>
     </svg>
 
-    <!-- Panel lateral de configuración -->
-    <div class="w-80 bg-white border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10 overflow-y-auto"
+    <!-- Panel de configuración (a un lado en PC y te sigue al bajar; debajo del lienzo en celular) -->
+    <div class="w-full md:w-80 md:shrink-0 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto bg-white border-t-4 md:border-t-0 md:border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10"
       *ngIf="standSeleccionado">
       <div class="flex items-center justify-between border-b-2 border-[#2C221E] pb-2 mb-1">
         <h3 class="text-lg font-black text-[#2C221E] uppercase">Configurar mesa</h3>
