@@ -46,14 +46,14 @@ export class AuthService {
       tap((response) => {
         if (response?.access_token) {
           this.setToken(response.access_token);
-          localStorage.setItem(this.FLAG_KEY, String(!!response.debeCambiarPassword));
         }
       })
     );
   }
 
+  // Ya no se obliga a cambiar la contraseña; el usuario la cambia cuando quiera
   debeCambiarPassword(): boolean {
-    return localStorage.getItem(this.FLAG_KEY) === 'true';
+    return false;
   }
 
   cambiarCredenciales(data: CambiarCredencialesDto) {

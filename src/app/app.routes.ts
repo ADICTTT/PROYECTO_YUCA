@@ -4,7 +4,6 @@ import { authGuard } from './core/guards/auth.guard';
 import { ArtistRegisterComponent } from './features/public/artist-register/artist-register.component/artist-register.component';
 import { HomeComponent } from './features/public/home/home.component';
 import { roleGuard } from './core/guards/role.guard';
-import { credencialesGuard } from './core/guards/credenciales.guard';
 import { MapaSvg } from './features/admin/mapa-svg/mapa-svg';
 
 export const routes: Routes = [
@@ -65,7 +64,7 @@ export const routes: Routes = [
     path: 'mi-panel',
     loadComponent: () =>
       import('./features/expositor/mi-panel/mi-panel.component').then(m => m.MiPanelComponent),
-    canActivate: [authGuard, roleGuard, credencialesGuard],
+    canActivate: [authGuard, roleGuard],
     data: { roles: ['EXPOSITOR'] },
   },
 

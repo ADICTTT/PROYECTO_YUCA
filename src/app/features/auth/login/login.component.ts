@@ -32,18 +32,14 @@ export class LoginComponent {
     }
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
-      next: (res) => {
-        if (res.debeCambiarPassword) {
-          this.router.navigate(['/mi-cuenta']);
-          return;
-        }
+      next: () => {
         const rol = this.authService.getRol();
-        if (rol === 'ADMIN') {
-          this.router.navigate(['/admin/postulaciones']);
-        } else {
-          this.router.navigate(['/mi-panel']);
-        }
-      },
+          if (rol === 'ADMIN') {
+            this.router.navigate(['/admin/postulaciones']);
+          } else {
+            this.router.navigate(['/mi-panel']);
+          }
+        },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Credenciales incorrectas';
       },
