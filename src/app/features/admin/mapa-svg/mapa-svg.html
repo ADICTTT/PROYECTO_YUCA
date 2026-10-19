@@ -28,6 +28,16 @@
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#D9C2F0]"></span>Comida</span>
 
     <div class="flex flex-wrap items-center gap-2 ml-auto">
+      <button type="button" (click)="alternarModoSeleccion()"
+        [class]="modoSeleccion
+          ? 'px-3 h-8 bg-[#2C221E] text-[#F4C453] rounded-xl border-2 border-[#2C221E] cursor-pointer'
+          : 'px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer'">
+        <i class="fa-solid fa-object-group mr-1"></i>Selección múltiple: {{ modoSeleccion ? 'SÍ' : 'NO' }}
+      </button>
+      <button type="button" (click)="seleccionarTodas()"
+        class="px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
+        <i class="fa-solid fa-check-double mr-1"></i>Seleccionar todas
+      </button>
       <button type="button" (click)="alternarModoMesas()"
         [class]="modoMesas
           ? 'px-3 h-8 bg-[#2C221E] text-[#F4C453] rounded-xl border-2 border-[#2C221E] cursor-pointer'
@@ -53,19 +63,19 @@
           : 'px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer'">
         <i class="fa-solid fa-map mr-1"></i>Plano
       </button>
-      <button *ngIf="standSeleccionado" type="button" (click)="irAlPanel()"
+      <button *ngIf="seleccion.length > 0" type="button" (click)="irAlPanel()"
         class="md:hidden px-3 h-8 bg-[#F4C453] text-[#2C221E] rounded-xl border-2 border-[#2C221E] cursor-pointer">
         <i class="fa-solid fa-sliders mr-1"></i>Configurar
       </button>
-      <button *ngIf="standSeleccionado" type="button" (click)="quitarSeleccion()"
+      <button *ngIf="seleccion.length > 0" type="button" (click)="quitarSeleccion()"
         class="px-3 h-8 bg-[#E85A4F] text-white rounded-xl border-2 border-[#2C221E] cursor-pointer">
-        <i class="fa-solid fa-xmark mr-1"></i>Quitar selección
+        <i class="fa-solid fa-xmark mr-1"></i>Quitar selección ({{ seleccion.length }})
       </button>
     </div>
   </div>
 
   <p class="px-4 pb-2 text-[11px] font-semibold text-[#5C5046]">
-    Mueve las mesas sobre el plano y toca "Guardar cambios": los artistas verán el mismo plano con tus mesas encima. PC: la rueda baja la página, Ctrl + rueda hace zoom y arrastrar el fondo mueve de lado. Celular: enciende "Mover mesas" para arrastrar una mesa con el dedo; apagado, el dedo desplaza la página. Zoom con + y −.
+    Mueve las mesas sobre el plano y toca "Guardar cambios": los artistas verán el mismo plano con tus mesas encima. Selección múltiple: Ctrl, Shift o Cmd + clic en varias mesas (en celular, enciende "Selección múltiple" y toca cada mesa); las seleccionadas se mueven juntas y puedes cambiarles precio, tamaño, sillas y servicios a la vez. PC: la rueda baja la página, Ctrl + rueda hace zoom y arrastrar el fondo mueve de lado. Celular: enciende "Mover mesas" para arrastrar con el dedo; apagado, el dedo desplaza la página. Zoom con + y −.
   </p>
 
   <!-- Contenedor del mapa y panel -->
@@ -100,13 +110,14 @@
         <g *ngFor="let stand of stands"
           [attr.transform]="'translate(' + stand.posicionX + ',' + stand.posicionY + ') rotate(' + stand.rotacion + ')'"
           (pointerdown)="iniciarArrastreStand(stand, $event)"
+          style="touch-action: none;"
           class="cursor-pointer">
 
           <rect [attr.width]="stand.ancho" [attr.height]="stand.alto"
             [attr.fill]="obtenerColorCategoria(stand.categoria)"
             [attr.fill-opacity]="verPlano ? 0.85 : 1"
-            [attr.stroke]="stand === standSeleccionado ? '#E85A4F' : '#2C221E'"
-            [attr.stroke-width]="stand === standSeleccionado ? '5' : '3'" rx="8" ry="8" />
+            [attr.stroke]="estaSeleccionada(stand) ? '#E85A4F' : '#2C221E'"
+            [attr.stroke-width]="estaSeleccionada(stand) ? '5' : '3'" rx="8" ry="8" />
 
           <text [attr.x]="stand.ancho / 2" [attr.y]="stand.alto / 2"
             [attr.transform]="rotarTexto(stand)"
@@ -119,7 +130,7 @@
       </g>
     </svg>
 
-    <!-- Panel de configuración (a un lado en PC y te sigue al bajar; debajo del lienzo en celular) -->
+    <!-- Panel de UNA mesa -->
     <div id="panel-mesa"
       class="w-full md:w-80 md:shrink-0 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto bg-white border-t-4 md:border-t-0 md:border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10"
       *ngIf="standSeleccionado">
@@ -198,6 +209,88 @@
       <button type="button" (click)="actualizarStandSeleccionado()"
         class="mt-4 bg-[#E85A4F] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-6 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
         Aplicar cambios
+      </button>
+    </div>
+
+    <!-- Panel de CAMBIO MASIVO (2 o más mesas) -->
+    <div id="panel-mesa"
+      class="w-full md:w-80 md:shrink-0 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto bg-white border-t-4 md:border-t-0 md:border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10"
+      *ngIf="seleccion.length > 1">
+      <div class="flex items-center justify-between border-b-2 border-[#2C221E] pb-2 mb-1">
+        <h3 class="text-lg font-black text-[#2C221E] uppercase">Cambio masivo</h3>
+        <button type="button" (click)="quitarSeleccion()" aria-label="Cerrar panel"
+          class="w-8 h-8 grid place-items-center text-[#2C221E] bg-white hover:bg-[#E85A4F] hover:text-white rounded-full border-2 border-[#2C221E] transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs font-black text-[#E85A4F] uppercase">{{ seleccion.length }} mesas seleccionadas</p>
+      <p class="text-[11px] font-semibold text-[#5C5046]">
+        Solo se aplican los campos que llenes. Lo que dejes vacío o en "No cambiar" no se toca.
+      </p>
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Precio (Bs)</label>
+      <input type="number" [(ngModel)]="masivo.precio" min="0" placeholder="No cambiar"
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Categoría</label>
+      <select [(ngModel)]="masivo.categoria"
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        <option value="">No cambiar</option>
+        <option value="ILUSTRADORES">Ilustradores (blanco)</option>
+        <option value="EMPRENDEDORES">Emprendedores (amarillo)</option>
+        <option value="COMIDA">Comida (lila)</option>
+      </select>
+
+      <div class="border-t-2 border-[#2C221E]/15 pt-2 mt-1">
+        <p class="text-xs font-black text-[#2C221E] uppercase">Tamaño real (cm)</p>
+        <p class="text-[11px] font-semibold text-[#5C5046]">Llena Largo y Ancho juntos. Cada mesa mantiene su orientación.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-black text-[#5C5046] uppercase">Largo (cm)</label>
+          <input type="number" [(ngModel)]="masivo.largo" min="1" placeholder="200"
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        </div>
+        <div>
+          <label class="block text-xs font-black text-[#5C5046] uppercase">Ancho (cm)</label>
+          <input type="number" [(ngModel)]="masivo.ancho" min="1" placeholder="90"
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        </div>
+      </div>
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Sillas</label>
+      <input type="number" [(ngModel)]="masivo.sillas" min="0" placeholder="No cambiar"
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Botella de agua (merienda)</label>
+      <select [(ngModel)]="masivo.merienda"
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        <option value="">No cambiar</option>
+        <option value="si">Sí incluye</option>
+        <option value="no">No incluye</option>
+      </select>
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Bajo techo</label>
+      <select [(ngModel)]="masivo.bajoTecho"
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        <option value="">No cambiar</option>
+        <option value="si">Sí, bajo techo</option>
+        <option value="no">No, al aire libre</option>
+      </select>
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Rotación (°)</label>
+      <input type="number" [(ngModel)]="masivo.rotacion" placeholder="No cambiar"
+        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+
+      <button type="button" (click)="aplicarMasivo()"
+        class="mt-4 bg-[#E85A4F] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-6 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+        Aplicar a {{ seleccion.length }} mesas
+      </button>
+      <button type="button" (click)="limpiarMasivo()"
+        class="bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-6 py-2">
+        Limpiar campos
       </button>
     </div>
   </div>

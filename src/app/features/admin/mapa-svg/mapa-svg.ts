@@ -2,6 +2,8 @@ import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { StandService, Stand } from '../../../core/services/stand.service';
 import { PLANOS_RECT, RectPlano } from '../../../core/config/planos.config';
 
@@ -10,6 +12,12 @@ interface Limites {
   minY: number;
   maxX: number;
   maxY: number;
+}
+
+interface PosicionInicial {
+  stand: Stand;
+  x: number;
+  y: number;
 }
 
 // Clave del plano según el id del sector
@@ -44,12 +52,20 @@ export class MapaSvg implements OnInit {
   ];
   sectorActualId: number = 1;
   stands: Stand[] = [];
-  standSeleccionado: Stand | null = null;
+
+  // Mesas seleccionadas (1 = edición individual, 2 o más = cambio masivo)
+  seleccion: Stand[] = [];
+
+  // En celular: true = cada toque agrega o quita mesas de la selección
+  modoSeleccion = false;
 
   // Medidas reales de la mesa seleccionada (cm)
   medidaLargo: number | null = null;
   medidaAncho: number | null = null;
   private mesaVertical = false;
+
+  // Campos del cambio masivo (vacío = no cambiar)
+  masivo = this.masivoVacio();
 
   // En celular: true = el dedo arrastra mesas; false = el dedo desplaza la página
   modoMesas = false;
@@ -68,10 +84,13 @@ export class MapaSvg implements OnInit {
   startX: number = 0;
   startY: number = 0;
 
+  // Arrastre de mesas (una o varias)
   isDraggingStand: boolean = false;
-  standArrastrando: Stand | null = null;
-  dragOffsetX: number = 0;
-  dragOffsetY: number = 0;
+  private arrastrados: PosicionInicial[] = [];
+  private inicioClienteX = 0;
+  private inicioClienteY = 0;
+  private movioStand = false;
+  private standClic: Stand | null = null;
 
   // Plano de fondo (posición fija, igual que en el mapa de los artistas)
   verPlano = true;
@@ -90,6 +109,8 @@ export class MapaSvg implements OnInit {
     this.standService.getStandsBySector(this.sectorActualId).subscribe({
       next: (data) => {
         this.stands = data;
+        this.seleccion = [];
+        this.alCambiarSeleccion();
         setTimeout(() => this.ajustarVista(), 0);
       },
       error: (err) => console.error('Error al cargar stands', err)
@@ -98,7 +119,8 @@ export class MapaSvg implements OnInit {
 
   cambiarSector(sectorId: number): void {
     this.sectorActualId = sectorId;
-    this.standSeleccionado = null;
+    this.seleccion = [];
+    this.alCambiarSeleccion();
     this.cargarStands();
   }
 
@@ -132,15 +154,38 @@ export class MapaSvg implements OnInit {
     return Math.max(4, Math.min(alto * 0.55, (ancho * 0.9) / largo));
   }
 
-  // ───────────── Selección y medidas reales ─────────────
+  // ───────────── Selección (una o varias) ─────────────
 
-  seleccionar(stand: Stand): void {
-    if (this.standSeleccionado === stand) return;
-    this.standSeleccionado = stand;
-    this.mesaVertical = Number(stand.alto) > Number(stand.ancho);
+  // Mesa en edición individual (solo cuando hay exactamente 1 seleccionada)
+  get standSeleccionado(): Stand | null {
+    return this.seleccion.length === 1 ? this.seleccion[0] : null;
+  }
+
+  estaSeleccionada(stand: Stand): boolean {
+    return this.seleccion.includes(stand);
+  }
+
+  private alternarSeleccion(stand: Stand): void {
+    if (this.estaSeleccionada(stand)) {
+      this.seleccion = this.seleccion.filter(s => s !== stand);
+    } else {
+      this.seleccion = [...this.seleccion, stand];
+    }
+    this.alCambiarSeleccion();
+  }
+
+  // Al quedar una sola mesa, carga sus medidas reales en el panel
+  private alCambiarSeleccion(): void {
+    const s = this.standSeleccionado;
+    if (!s) {
+      this.medidaLargo = null;
+      this.medidaAncho = null;
+      return;
+    }
+    this.mesaVertical = Number(s.alto) > Number(s.ancho);
 
     // Lee "200 × 90 cm" si ya estaba guardado
-    const m = String(stand.medidas ?? '').match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)/i);
+    const m = String(s.medidas ?? '').match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)/i);
     if (m) {
       this.medidaLargo = Number(m[1].replace(',', '.'));
       this.medidaAncho = Number(m[2].replace(',', '.'));
@@ -151,7 +196,17 @@ export class MapaSvg implements OnInit {
   }
 
   quitarSeleccion(): void {
-    this.standSeleccionado = null;
+    this.seleccion = [];
+    this.alCambiarSeleccion();
+  }
+
+  seleccionarTodas(): void {
+    this.seleccion = [...this.stands];
+    this.alCambiarSeleccion();
+  }
+
+  alternarModoSeleccion(): void {
+    this.modoSeleccion = !this.modoSeleccion;
   }
 
   // Recalcula el dibujo a partir de las medidas reales
@@ -334,22 +389,35 @@ export class MapaSvg implements OnInit {
       }
       this.panX = nuevoX;
       this.limitarPan();
-    } else if (this.isDraggingStand && this.standArrastrando) {
+    } else if (this.isDraggingStand && this.arrastrados.length > 0) {
       const gridSize = 1;
-      const x = (event.clientX - this.dragOffsetX - this.panX) / this.zoom;
-      const y = (event.clientY - this.dragOffsetY - this.panY) / this.zoom;
+      const dxPantalla = event.clientX - this.inicioClienteX;
+      const dyPantalla = event.clientY - this.inicioClienteY;
+      if (Math.abs(dxPantalla) > 3 || Math.abs(dyPantalla) > 3) {
+        this.movioStand = true;
+      }
+      const dx = dxPantalla / this.zoom;
+      const dy = dyPantalla / this.zoom;
 
-      const gx = Math.round(x / gridSize) * gridSize;
-      const gy = Math.round(y / gridSize) * gridSize;
-      this.standArrastrando.posicionX = Math.min(this.POS_MAX, Math.max(this.POS_MIN, gx));
-      this.standArrastrando.posicionY = Math.min(this.POS_MAX, Math.max(this.POS_MIN, gy));
+      // Todas las mesas seleccionadas se mueven juntas
+      for (const a of this.arrastrados) {
+        const gx = Math.round((a.x + dx) / gridSize) * gridSize;
+        const gy = Math.round((a.y + dy) / gridSize) * gridSize;
+        a.stand.posicionX = Math.min(this.POS_MAX, Math.max(this.POS_MIN, gx));
+        a.stand.posicionY = Math.min(this.POS_MAX, Math.max(this.POS_MIN, gy));
+      }
     }
   }
 
   detenerArrastre(): void {
     // Un clic en el fondo (sin arrastrar) quita la selección
     if (this.isDraggingCanvas && !this.movioElFondo) {
-      this.standSeleccionado = null;
+      this.quitarSeleccion();
+    }
+    // Un clic (sin arrastrar) sobre una mesa de un grupo deja solo esa mesa
+    if (this.isDraggingStand && !this.movioStand && this.standClic && this.seleccion.length > 1) {
+      this.seleccion = [this.standClic];
+      this.alCambiarSeleccion();
     }
     this.cancelarArrastre();
   }
@@ -358,21 +426,40 @@ export class MapaSvg implements OnInit {
   cancelarArrastre(): void {
     this.isDraggingCanvas = false;
     this.isDraggingStand = false;
-    this.standArrastrando = null;
+    this.arrastrados = [];
+    this.standClic = null;
   }
 
   iniciarArrastreStand(stand: Stand, event: PointerEvent): void {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     event.stopPropagation();
-    this.seleccionar(stand);
+
+    // Ctrl / Shift / Cmd + clic, o modo "Selección múltiple": agrega o quita sin arrastrar
+    const multiple = event.ctrlKey || event.shiftKey || event.metaKey || this.modoSeleccion;
+    if (multiple) {
+      this.alternarSeleccion(stand);
+      return;
+    }
+
+    // Clic normal: si la mesa no estaba seleccionada, pasa a ser la única seleccionada
+    if (!this.estaSeleccionada(stand)) {
+      this.seleccion = [stand];
+      this.alCambiarSeleccion();
+    }
 
     // Con el dedo, solo se arrastra si "Mover mesas" está encendido
     if (event.pointerType === 'touch' && !this.modoMesas) return;
 
     this.isDraggingStand = true;
-    this.standArrastrando = stand;
-    this.dragOffsetX = event.clientX - (Number(stand.posicionX) * this.zoom + this.panX);
-    this.dragOffsetY = event.clientY - (Number(stand.posicionY) * this.zoom + this.panY);
+    this.movioStand = false;
+    this.standClic = stand;
+    this.inicioClienteX = event.clientX;
+    this.inicioClienteY = event.clientY;
+    this.arrastrados = this.seleccion.map(s => ({
+      stand: s,
+      x: Number(s.posicionX),
+      y: Number(s.posicionY)
+    }));
     this.capturar(event);
   }
 
@@ -434,6 +521,108 @@ export class MapaSvg implements OnInit {
         alert('Stand actualizado correctamente');
       },
       error: (err) => alert(err.error?.message || 'Error al actualizar')
+    });
+  }
+
+  // ───────────── Cambio masivo ─────────────
+
+  private masivoVacio() {
+    return {
+      precio: null as number | null,
+      categoria: '' as '' | 'ILUSTRADORES' | 'EMPRENDEDORES' | 'COMIDA',
+      largo: null as number | null,
+      ancho: null as number | null,
+      sillas: null as number | null,
+      merienda: '' as '' | 'si' | 'no',
+      bajoTecho: '' as '' | 'si' | 'no',
+      rotacion: null as number | null
+    };
+  }
+
+  private lleno(valor: number | null): boolean {
+    return valor !== null && valor !== undefined && (valor as any) !== '' && !isNaN(Number(valor));
+  }
+
+  limpiarMasivo(): void {
+    this.masivo = this.masivoVacio();
+  }
+
+  aplicarMasivo(): void {
+    const destino = [...this.seleccion];
+    if (destino.length < 2) return;
+
+    const m = this.masivo;
+    const hayLargo = this.lleno(m.largo);
+    const hayAncho = this.lleno(m.ancho);
+
+    if (hayLargo !== hayAncho) {
+      alert('Para cambiar el tamaño llena Largo y Ancho juntos.');
+      return;
+    }
+    if ((hayLargo && Number(m.largo) <= 0) || (hayAncho && Number(m.ancho) <= 0)) {
+      alert('Largo y Ancho deben ser mayores a 0.');
+      return;
+    }
+    if (this.lleno(m.precio) && Number(m.precio) < 0) {
+      alert('El precio no puede ser negativo.');
+      return;
+    }
+    if (this.lleno(m.sillas) && Number(m.sillas) < 0) {
+      alert('Las sillas no pueden ser negativas.');
+      return;
+    }
+
+    const hayAlgo = this.lleno(m.precio) || m.categoria !== '' || hayLargo
+      || this.lleno(m.sillas) || m.merienda !== '' || m.bajoTecho !== '' || this.lleno(m.rotacion);
+    if (!hayAlgo) {
+      alert('Llena al menos un campo para aplicar.');
+      return;
+    }
+
+    if (!confirm(`¿Aplicar estos cambios a ${destino.length} mesas?`)) return;
+
+    const peticiones = destino.map(s => {
+      const cambios: Partial<Stand> = {};
+
+      if (this.lleno(m.precio)) cambios.precio = Number(m.precio);
+      if (m.categoria !== '') cambios.categoria = m.categoria;
+      if (this.lleno(m.sillas)) cambios.sillas = Number(m.sillas);
+      if (m.merienda !== '') cambios.incluyeMerienda = m.merienda === 'si';
+      if (m.bajoTecho !== '') cambios.bajoTecho = m.bajoTecho === 'si';
+      if (this.lleno(m.rotacion)) cambios.rotacion = Number(m.rotacion);
+
+      if (hayLargo) {
+        const largo = Number(m.largo);
+        const ancho = Number(m.ancho);
+        const a = Math.max(TAM_MIN, Math.round(largo * ESCALA));
+        const b = Math.max(TAM_MIN, Math.round(ancho * ESCALA));
+        const vertical = Number(s.alto) > Number(s.ancho);
+        cambios.ancho = vertical ? b : a;
+        cambios.alto = vertical ? a : b;
+        cambios.medidas = `${largo} × ${ancho} cm`;
+      }
+
+      return this.standService.updateStand(Number(s.id), cambios).pipe(
+        map(() => ({ s, cambios, ok: true })),
+        catchError(() => of({ s, cambios, ok: false }))
+      );
+    });
+
+    forkJoin(peticiones).subscribe(resultados => {
+      let fallidas = 0;
+      for (const r of resultados) {
+        if (r.ok) {
+          Object.assign(r.s, r.cambios);
+        } else {
+          fallidas++;
+        }
+      }
+      if (fallidas === 0) {
+        alert(`Cambios aplicados a ${resultados.length} mesas`);
+        this.limpiarMasivo();
+      } else {
+        alert(`Se aplicaron ${resultados.length - fallidas} de ${resultados.length} mesas. Fallaron ${fallidas}; revisa la consola o vuelve a intentar.`);
+      }
     });
   }
 }
