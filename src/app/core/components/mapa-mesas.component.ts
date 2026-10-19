@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, effect, input, output, signal, viewChild } from '@angular/core';
 import { MesaMapa, SectorMapa } from '../services/reserva.service';
 import { PLANOS_RECT } from '../config/planos.config';
 
@@ -26,6 +26,11 @@ interface RectPlano {
 const ZOOM_MIN_REL = 0.9;
 const ZOOM_MAX_REL = 3;
 
+// Igual que el editor de administración
+const MARGEN = 20;
+const ALTO_MIN = 360;
+const ALTO_MAX = 2400;
+
 @Component({
   selector: 'app-mapa-mesas',
   standalone: true,
@@ -50,7 +55,6 @@ export class MapaMesasComponent {
   readonly opacidad = signal(0.5);
   private readonly ajustes = signal<Record<string, RectPlano>>({});
 
-  // Elementos fijos del plano (iguales a los del editor de administración)
   private readonly nombreSector = computed(() => (this.sectorActivo()?.nombre ?? '').toLowerCase());
 
   readonly claveSector = computed(() => {
@@ -70,15 +74,46 @@ export class MapaMesasComponent {
   // Las guías dibujadas a mano solo se ven cuando el plano de fondo está apagado
   readonly mostrarGuias = computed(() => !this.verPlano() || !this.planoUrl());
 
+  // Área que ocupan solo las mesas
+  private readonly limitesMesas = computed<Limites | null>(() => {
+    const lista = this.stands();
+    if (lista.length === 0) return null;
+    return {
+      minX: Math.min(...lista.map((m) => m.x)),
+      minY: Math.min(...lista.map((m) => m.y)),
+      maxX: Math.max(...lista.map((m) => m.x + m.ancho)),
+      maxY: Math.max(...lista.map((m) => m.y + m.alto)),
+    };
+  });
+
+  // Posición del plano si está guardada o calibrada
+  private readonly rectGuardado = computed<RectPlano | null>(() => {
+    const c = this.claveSector();
+    return this.ajustes()[c] ?? PLANOS_RECT[c] ?? null;
+  });
+
   // Posición y tamaño del plano dentro del mapa
   readonly rectPlano = computed<RectPlano>(() => {
-    const c = this.claveSector();
-    const guardado = this.ajustes()[c] ?? PLANOS_RECT[c];
+    const guardado = this.rectGuardado();
     if (guardado) return guardado;
-    const lim = this.limites();
+    const lim = this.limitesMesas();
     if (!lim) return { x: 0, y: 0, w: 100, h: 100 };
     const m = 30;
     return { x: lim.minX - m, y: lim.minY - m, w: lim.maxX - lim.minX + m * 2, h: lim.maxY - lim.minY + m * 2 };
+  });
+
+  // Área total del sector: mesas + plano de fondo (igual que el editor de administración)
+  private readonly limites = computed<Limites | null>(() => {
+    const base = this.limitesMesas();
+    if (!base) return null;
+    if (!(this.verPlano() && this.planoUrl())) return base;
+    const r = this.rectPlano();
+    return {
+      minX: Math.min(base.minX, r.x),
+      minY: Math.min(base.minY, r.y),
+      maxX: Math.max(base.maxX, r.x + r.w),
+      maxY: Math.max(base.maxY, r.y + r.h),
+    };
   });
 
   // Línea lista para copiar y pegar en el código
@@ -101,28 +136,16 @@ export class MapaMesasComponent {
   readonly ty = signal(0);
   readonly transform = computed(() => `translate(${this.tx()} ${this.ty()}) scale(${this.k()})`);
 
+  // La altura del mapa cubre todo el largo del sector y la página sigue bajando normal
+  readonly alturaLienzo = computed(() => {
+    const lim = this.limites();
+    if (!lim) return ALTO_MIN;
+    const alto = (lim.maxY - lim.minY + MARGEN * 2) * this.k();
+    return Math.min(ALTO_MAX, Math.max(ALTO_MIN, Math.round(alto)));
+  });
+
   // Escala de la vista "ver todo": sirve de base para los límites del zoom
   private kBase = 1;
-
-  // Área que ocupa todo el contenido del sector (mesas + elementos fijos)
-  private readonly limites = computed<Limites | null>(() => {
-    const lista = this.stands();
-    if (lista.length === 0) return null;
-    let minX = Math.min(...lista.map((m) => m.x));
-    let minY = Math.min(...lista.map((m) => m.y));
-    let maxX = Math.max(...lista.map((m) => m.x + m.ancho));
-    let maxY = Math.max(...lista.map((m) => m.y + m.alto));
-
-    const incluir = (x1: number, y1: number, x2: number, y2: number) => {
-      minX = Math.min(minX, x1);
-      minY = Math.min(minY, y1);
-      maxX = Math.max(maxX, x2);
-      maxY = Math.max(maxY, y2);
-    };
-
-    
-    return { minX, minY, maxX, maxY };
-  });
 
   private readonly svgRef = viewChild<ElementRef<SVGSVGElement>>('svg');
 
@@ -140,6 +163,11 @@ export class MapaMesasComponent {
     });
   }
 
+  @HostListener('window:resize')
+  onResize(): void {
+    this.ajustar();
+  }
+
   cambiarSector(i: number): void {
     this.sectorIdx.set(i);
   }
@@ -150,6 +178,7 @@ export class MapaMesasComponent {
 
   alternarPlano(): void {
     this.verPlano.update((v) => !v);
+    setTimeout(() => this.ajustar(), 0);
   }
 
   alternarCalibrar(): void {
@@ -172,25 +201,21 @@ export class MapaMesasComponent {
 
   // ───────────── Vista ─────────────
 
+  // Encaja el sector al ANCHO del mapa (como en administración); el largo se recorre bajando la página
   ajustar(): void {
     const svg = this.svgRef()?.nativeElement;
     const lim = this.limites();
     if (!svg || !lim) return;
 
     const caja = svg.getBoundingClientRect();
-    if (caja.width === 0 || caja.height === 0) return;
+    if (caja.width === 0) return;
 
-    const margen = 20;
-    const minX = lim.minX - margen;
-    const minY = lim.minY - margen;
-    const ancho = lim.maxX + margen - minX;
-    const alto = lim.maxY + margen - minY;
-
-    const nk = Math.max(0.05, Math.min(caja.width / ancho, caja.height / alto));
+    const ancho = lim.maxX - lim.minX + MARGEN * 2;
+    const nk = Math.max(0.05, caja.width / ancho);
     this.kBase = nk;
     this.k.set(nk);
-    this.tx.set((caja.width - ancho * nk) / 2 - minX * nk);
-    this.ty.set((caja.height - alto * nk) / 2 - minY * nk);
+    this.tx.set((caja.width - ancho * nk) / 2 - (lim.minX - MARGEN) * nk);
+    this.ty.set(MARGEN - lim.minY * nk);
   }
 
   zoomBoton(factor: number): void {
@@ -200,17 +225,16 @@ export class MapaMesasComponent {
     this.zoomEn(caja.width / 2, caja.height / 2, factor);
   }
 
-  private zoomEn(px: number, py: number, factor: number): void {
+  private zoomEn(px: number, _py: number, factor: number): void {
     const actual = this.k();
     const nuevo = Math.min(this.kBase * ZOOM_MAX_REL, Math.max(this.kBase * ZOOM_MIN_REL, actual * factor));
     const razon = nuevo / actual;
     this.tx.set(px - (px - this.tx()) * razon);
-    this.ty.set(py - (py - this.ty()) * razon);
     this.k.set(nuevo);
     this.limitarArrastre();
   }
 
-  // Evita que el mapa se pierda de vista: siempre queda una parte visible
+  // Vertical: fijo (el mapa ya muestra todo el largo). Horizontal: libre pero con tope.
   private limitarArrastre(): void {
     const svg = this.svgRef()?.nativeElement;
     const lim = this.limites();
@@ -218,20 +242,19 @@ export class MapaMesasComponent {
     const caja = svg.getBoundingClientRect();
     const k = this.k();
     const mx = Math.min(80, caja.width * 0.25);
-    const my = Math.min(80, caja.height * 0.25);
 
     const txMin = mx - lim.maxX * k;
     const txMax = caja.width - mx - lim.minX * k;
-    const tyMin = my - lim.maxY * k;
-    const tyMax = caja.height - my - lim.minY * k;
 
     this.tx.set(Math.min(txMax, Math.max(txMin, this.tx())));
-    this.ty.set(Math.min(tyMax, Math.max(tyMin, this.ty())));
+    this.ty.set(MARGEN - lim.minY * k);
   }
 
   // ───────────── Mouse y táctil ─────────────
 
   onWheel(e: WheelEvent): void {
+    // Solo Ctrl + rueda hace zoom. La rueda sola baja la página.
+    if (!e.ctrlKey) return;
     e.preventDefault();
     const svg = this.svgRef()?.nativeElement;
     if (!svg) return;
@@ -263,7 +286,6 @@ export class MapaMesasComponent {
       if (this.acumulado > 6) this.movido = true;
       if (this.movido) {
         this.tx.update((v) => v + dx);
-        this.ty.update((v) => v + dy);
         this.limitarArrastre();
       }
     } else if (this.punteros.size === 2) {

@@ -27,7 +27,8 @@
       <div class="relative bg-[#FFFDF5] border-4 border-[#2C221E] rounded-[2rem] overflow-hidden shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
         <svg
           #svg
-          class="w-full block select-none h-[min(45vh,360px)] sm:h-[min(55vh,520px)]"
+          class="w-full block select-none"
+          [style.height.px]="alturaLienzo()"
           [style.touch-action]="moverMapa() ? 'none' : 'pan-y'"
           style="cursor: grab;"
           (pointerdown)="onDown($event)"
