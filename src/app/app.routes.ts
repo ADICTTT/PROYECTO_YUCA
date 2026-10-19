@@ -12,19 +12,24 @@ export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'registro-artista', component: ArtistRegisterComponent },
   { path: 'login', component: LoginComponent },
-  {
-    // Pública y sin login: solo arma el mensaje de WhatsApp, no guarda nada en base de datos
-    path: 'meet-greet',
-    loadComponent: () =>
-      import('./features/public/meet-greet-publico/meet-greet-publico.component').then(
-        m => m.MeetGreetPublicoComponent
-      ),
-  },
+
   {
     // Pública: el propio componente decide qué mostrar (visitante, expositor, cerrado, mapa)
     path: 'mesas',
     loadComponent: () =>
       import('./features/expositor/mesas/mesas.component').then(m => m.MesasComponent),
+  },
+
+  // Meet & Greet: TEMPORAL, solo admins mientras no se abre al público.
+  // Para abrirlo: borrar canActivate y data.
+  {
+    path: 'meet-greet',
+    loadComponent: () =>
+      import('./features/public/meet-greet-publico/meet-greet-publico.component').then(
+        m => m.MeetGreetPublicoComponent
+      ),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
   },
 
   // Rutas del Administrador (Protegidas)

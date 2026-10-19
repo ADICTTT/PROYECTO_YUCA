@@ -20,7 +20,7 @@
 
     <!-- Navegación escritorio -->
     <nav class="hidden lg:flex items-center gap-1 text-[#2C221E]" aria-label="Principal">
-      @for (link of links; track link.texto) {
+      @for (link of linksVisibles(); track link.texto) {
         <a
           [routerLink]="link.ruta"
           [fragment]="link.fragmento"
@@ -107,7 +107,7 @@
       class="lg:hidden border-t-2 border-[#2C221E]/15 bg-[#FFFDF5] px-4 py-4 space-y-2 text-[#2C221E]"
       aria-label="Principal móvil"
     >
-      @for (link of links; track link.texto) {
+      @for (link of linksVisibles(); track link.texto) {
         <a
           [routerLink]="link.ruta"
           [fragment]="link.fragmento"

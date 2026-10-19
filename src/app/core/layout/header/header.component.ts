@@ -4,6 +4,14 @@ import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActi
 import { filter } from 'rxjs';
 import { AuthService } from '../../services/auth.service'; // ajusta la ruta a donde esté tu header
 
+interface LinkMenu {
+  texto: string;
+  icono: string;
+  ruta: string;
+  fragmento: string | undefined;
+  soloAdmin?: boolean;
+}
+
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -23,13 +31,17 @@ export class HeaderComponent {
   readonly esExpositor = computed(() => this.rol() === 'EXPOSITOR');
   readonly esAdmin = computed(() => this.rol() === 'ADMIN');
 
-  links = [
-    { texto: 'Inicio', icono: 'fa-house', ruta: '/', fragmento: undefined as string | undefined },
+  links: LinkMenu[] = [
+    { texto: 'Inicio', icono: 'fa-house', ruta: '/', fragmento: undefined },
     { texto: 'Próximo evento', icono: 'fa-calendar-days', ruta: '/', fragmento: 'proximo-evento' },
-    { texto: 'Meet & Greet', icono: 'fa-ticket', ruta: '/meet-greet', fragmento: undefined as string | undefined },
+    // TEMPORAL: solo admins. Para abrirlo al público, quitar soloAdmin.
+    { texto: 'Meet & Greet', icono: 'fa-ticket', ruta: '/meet-greet', fragmento: undefined, soloAdmin: true },
     { texto: 'Cómo participar', icono: 'fa-list-check', ruta: '/', fragmento: 'como-participar' },
     { texto: 'Ediciones pasadas', icono: 'fa-images', ruta: '/', fragmento: 'ediciones' },
   ];
+
+  // Enlaces que ve la sesión actual
+  readonly linksVisibles = computed(() => this.links.filter((l) => !l.soloAdmin || this.esAdmin()));
 
   opcionesActivo: IsActiveMatchOptions = {
     paths: 'exact',
