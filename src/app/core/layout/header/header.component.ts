@@ -26,6 +26,7 @@ export class HeaderComponent {
   links = [
     { texto: 'Inicio', icono: 'fa-house', ruta: '/', fragmento: undefined as string | undefined },
     { texto: 'Próximo evento', icono: 'fa-calendar-days', ruta: '/', fragmento: 'proximo-evento' },
+    { texto: 'Meet & Greet', icono: 'fa-ticket', ruta: '/meet-greet', fragmento: undefined as string | undefined },
     { texto: 'Cómo participar', icono: 'fa-list-check', ruta: '/', fragmento: 'como-participar' },
     { texto: 'Ediciones pasadas', icono: 'fa-images', ruta: '/', fragmento: 'ediciones' },
   ];

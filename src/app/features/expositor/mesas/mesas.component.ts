@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { EVENTO_ACTUAL } from '../../../core/config/evento.config';
 import { MapaMesasComponent } from '../../../core/components/mapa-mesas.component';
@@ -52,6 +53,7 @@ const COLORES_REGLA: ColorRegla[] = ['coral', 'oliva', 'amarillo'];
 export class MesasComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly reservas = inject(ReservasService);
   private readonly perfilesApi = inject(ProfileService);
 
@@ -71,6 +73,13 @@ export class MesasComponent implements OnInit {
   readonly reglas = signal<ReglasReservas | null>(null);
   readonly miReserva = signal<MiReserva | null>(null);
   readonly aceptando = signal(false);
+
+  // Leer las normas en cualquier momento (también después de aceptarlas)
+  readonly normasAbiertas = signal(false);
+  readonly cargandoNormas = signal(false);
+
+  // Mensaje de reserva pagada
+  readonly copiado = signal(false);
 
   // Mesa elegida y compañero
   readonly mesa = signal<MesaMapa | null>(null);
@@ -128,6 +137,16 @@ export class MesasComponent implements OnInit {
     const texto = this.reglas()?.texto;
     return texto ? this.parsearReglas(texto) : null;
   });
+
+  constructor() {
+    // El botón "Normas" del header llega aquí con ?normas=1
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((p) => {
+      if (p.get('normas')) {
+        this.abrirNormas();
+        this.router.navigate([], { queryParams: { normas: null }, replaceUrl: true });
+      }
+    });
+  }
 
   ngOnInit(): void {
     if (!this.auth.isAuthenticated()) {
@@ -266,7 +285,68 @@ export class MesasComponent implements OnInit {
     return r.estado === 'CONFIRMADA' ? 'Pagada' : 'Pendiente de pago';
   }
 
+  // ───────────── Mensaje de reserva pagada ─────────────
+
+  mensajeReserva(r: MiReserva): string {
+    const titular = r.participantes.find((p) => p.tipo === 'TITULAR');
+    const companero = r.participantes.find((p) => p.tipo === 'COMPANERO');
+    const lineas = [
+      'YUKAWAII FEST 2026 - RESERVA DE MESA',
+      `Estado: ${r.estado === 'CONFIRMADA' ? 'PAGADA' : 'PENDIENTE DE PAGO'}`,
+      `Código: ${r.codigo}`,
+      `Mesa: ${r.stand.codigo} (${r.stand.sector})`,
+      `Categoría: ${r.stand.categoria}`,
+      `Monto: Bs ${r.precio}`,
+    ];
+    if (titular) lineas.push(`Titular: ${titular.nombreComercial} (@${titular.instagram})`);
+    if (companero) lineas.push(`Compañero: ${companero.nombreComercial} (@${companero.instagram})`);
+    lineas.push('Fecha del evento: 14 y 15 de noviembre, Hotel Asturias, Santa Cruz');
+    return lineas.join('\n');
+  }
+
+  urlCompartirWhatsapp(r: MiReserva): string {
+    return 'https://wa.me/?text=' + encodeURIComponent(this.mensajeReserva(r));
+  }
+
+  async copiarMensaje(r: MiReserva): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.mensajeReserva(r));
+      this.copiado.set(true);
+      setTimeout(() => this.copiado.set(false), 2500);
+    } catch {
+      this.aviso.set('No se pudo copiar. Usa el botón de WhatsApp.');
+    }
+  }
+
   // ───────────── Reglas ─────────────
+
+  // Abre las normas para leerlas (también si ya fueron aceptadas)
+  abrirNormas(): void {
+    if (!this.auth.isAuthenticated()) return;
+    this.aviso.set('');
+    if (this.reglas()) {
+      this.normasAbiertas.set(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    this.cargandoNormas.set(true);
+    this.reservas.getReglas().subscribe({
+      next: (r) => {
+        this.reglas.set(r);
+        this.cargandoNormas.set(false);
+        this.normasAbiertas.set(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: (e) => {
+        this.cargandoNormas.set(false);
+        this.aviso.set(leerErrorApi(e).message);
+      },
+    });
+  }
+
+  cerrarNormas(): void {
+    this.normasAbiertas.set(false);
+  }
 
   private parsearReglas(texto: string): ReglasParseadas {
     const lineas = texto
@@ -330,6 +410,8 @@ export class MesasComponent implements OnInit {
     this.reservas.aceptarReglas().subscribe({
       next: () => {
         this.aceptando.set(false);
+        this.reglas.update((r) => (r ? { ...r, aceptadas: true } : r));
+        this.normasAbiertas.set(false);
         this.vista.set('mapa');
       },
       error: (e) => {

@@ -180,17 +180,38 @@
       </div>
     }
 
-    <!-- ───────── Reglas ───────── -->
-    @if (vista() === 'reglas' && reglas(); as r) {
-      <div class="bg-white border-4 border-[#2C221E] rounded-[2rem] p-6 md:p-8 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
-        <div class="flex items-center gap-3 mb-5">
-          <span class="w-12 h-12 shrink-0 grid place-items-center rounded-2xl bg-[#F4C453] border-2 border-[#2C221E] text-[#2C221E] text-xl">
-            <i class="fa-solid fa-scroll"></i>
-          </span>
-          <div>
-            <h2 class="text-xl md:text-2xl font-black text-[#2C221E] uppercase">Reglas y condiciones</h2>
-            <p class="text-xs font-bold text-[#5C5046]">Léelas con atención antes de elegir tu mesa.</p>
+    <!-- ───────── Cargando normas ───────── -->
+    @if (cargandoNormas()) {
+      <p class="mb-4 text-xs font-black text-[#5C5046] uppercase">
+        <i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando normas...
+      </p>
+    }
+
+    <!-- ───────── Reglas (primera vez, o para leerlas cuando quieras) ───────── -->
+    @if ((vista() === 'reglas' || normasAbiertas()) && reglas(); as r) {
+      <div class="mb-6 bg-white border-4 border-[#2C221E] rounded-[2rem] p-6 md:p-8 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+        <div class="flex items-center justify-between gap-3 mb-5">
+          <div class="flex items-center gap-3">
+            <span class="w-12 h-12 shrink-0 grid place-items-center rounded-2xl bg-[#F4C453] border-2 border-[#2C221E] text-[#2C221E] text-xl">
+              <i class="fa-solid fa-scroll"></i>
+            </span>
+            <div>
+              <h2 class="text-xl md:text-2xl font-black text-[#2C221E] uppercase">Reglas y condiciones</h2>
+              @if (r.aceptadas) {
+                <p class="text-xs font-bold text-[#7B8E3D]">
+                  <i class="fa-solid fa-circle-check mr-1"></i>Ya aceptaste las normas.
+                </p>
+              } @else {
+                <p class="text-xs font-bold text-[#5C5046]">Léelas con atención antes de elegir tu mesa.</p>
+              }
+            </div>
           </div>
+          @if (normasAbiertas()) {
+            <button type="button" (click)="cerrarNormas()" aria-label="Cerrar normas"
+              class="w-9 h-9 shrink-0 rounded-xl border-2 border-[#2C221E] bg-white text-[#2C221E]">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          }
         </div>
 
         @if (reglasParseadas(); as p) {
@@ -269,10 +290,17 @@
           <p class="mt-4 text-sm font-black text-[#E85A4F]">{{ aviso() }}</p>
         }
 
-        <button type="button" (click)="aceptarReglas()" [disabled]="aceptando()"
-          class="mt-6 w-full sm:w-auto bg-[#E85A4F] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-8 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] disabled:opacity-60">
-          @if (aceptando()) { Guardando... } @else { Acepto las reglas }
-        </button>
+        @if (!r.aceptadas) {
+          <button type="button" (click)="aceptarReglas()" [disabled]="aceptando()"
+            class="mt-6 w-full sm:w-auto bg-[#E85A4F] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-8 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] disabled:opacity-60">
+            @if (aceptando()) { Guardando... } @else { Acepto las reglas }
+          </button>
+        } @else {
+          <button type="button" (click)="cerrarNormas()"
+            class="mt-6 w-full sm:w-auto bg-white text-[#2C221E] font-black uppercase rounded-2xl border-2 border-[#2C221E] px-8 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+            Cerrar
+          </button>
+        }
       </div>
     }
 
@@ -300,7 +328,7 @@
         </div>
       }
 
-      @if (aviso()) {
+      @if (aviso() && !normasAbiertas()) {
         <div class="mb-4 bg-white border-2 border-[#E85A4F] rounded-2xl px-4 py-3 text-sm font-black text-[#E85A4F]">
           {{ aviso() }}
         </div>
@@ -339,7 +367,7 @@
               <li><i class="fa-solid fa-chair w-5 text-[#7B8E3D]"></i> Sillas: {{ s.sillas ?? 'Por confirmar' }}</li>
               <li>
                 <i class="fa-solid fa-utensils w-5 text-[#7B8E3D]"></i>
-                Merienda: {{ s.incluyeMerienda ? 'Incluida' : 'No incluida' }}
+                Botella de agua: {{ s.incluyeMerienda ? 'Incluida' : 'No incluida' }}
               </li>
               <li>
                 <i class="fa-solid fa-house w-5 text-[#7B8E3D]"></i>
@@ -351,7 +379,7 @@
               <p class="text-sm text-[#5C5046] font-bold mb-4">{{ s.descripcion }}</p>
             }
 
-                        @if (esAdmin()) {
+            @if (esAdmin()) {
               <!-- Administrador: elegir titular y compañero -->
               <div class="border-t-2 border-[#2C221E] pt-4 mb-4">
                 <label class="block text-xs font-black text-[#5C5046] uppercase mb-1" for="titular">
@@ -500,6 +528,12 @@
         </div>
       }
 
+      @if (aviso() && !normasAbiertas()) {
+        <div class="mb-4 bg-white border-2 border-[#E85A4F] rounded-2xl px-4 py-3 text-sm font-black text-[#E85A4F]">
+          {{ aviso() }}
+        </div>
+      }
+
       <div class="bg-white border-4 border-[#2C221E] rounded-[2rem] p-6 md:p-8 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>
@@ -583,6 +617,26 @@
           <p class="text-sm font-black text-[#7B8E3D] mb-3">
             <i class="fa-solid fa-circle-check mr-2"></i>Tu pago está confirmado. ¡Nos vemos en el festival!
           </p>
+
+          <!-- Mensaje de reserva pagada -->
+          <div class="mb-5 bg-[#FFF9E6] border-2 border-[#2C221E] rounded-2xl p-4">
+            <p class="text-xs font-black text-[#5C5046] uppercase mb-2">Mensaje de tu reserva</p>
+            <pre class="whitespace-pre-wrap break-words font-sans text-sm font-bold text-[#2C221E]">{{ mensajeReserva(r) }}</pre>
+            <div class="flex flex-wrap gap-3 mt-4">
+              <a [href]="urlCompartirWhatsapp(r)" target="_blank" rel="noopener"
+                class="inline-block bg-[#7B8E3D] text-white font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-5 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+                <i class="fa-brands fa-whatsapp mr-2"></i>Compartir por WhatsApp
+              </a>
+              <button type="button" (click)="copiarMensaje(r)"
+                class="bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-5 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+                @if (copiado()) {
+                  <i class="fa-solid fa-check mr-2"></i>Copiado
+                } @else {
+                  <i class="fa-regular fa-copy mr-2"></i>Copiar mensaje
+                }
+              </button>
+            </div>
+          </div>
         }
 
         <div class="flex flex-wrap gap-3">
@@ -592,6 +646,10 @@
               <i class="fa-brands fa-whatsapp mr-2"></i>Pedir QR de pago por WhatsApp
             </a>
           }
+          <button type="button" (click)="abrirNormas()"
+            class="inline-block bg-[#F4C453] text-[#2C221E] font-black uppercase rounded-2xl border-2 border-[#2C221E] px-6 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
+            <i class="fa-solid fa-scroll mr-2"></i>Ver normas
+          </button>
           <a [href]="canalUrl()" target="_blank" rel="noopener"
             class="inline-block bg-[#7B8E3D] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-6 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
             <i class="fa-brands fa-whatsapp mr-2"></i>Seguir canal

@@ -43,6 +43,9 @@ export class ReservasAdminComponent implements OnInit {
   // Ventana para avisar por WhatsApp que se liberó una mesa
   readonly aviso = signal<AvisoLiberacion | null>(null);
 
+  // Ventana para enviar por WhatsApp la confirmación de pago
+  readonly confirmacion = signal<ReservaAdmin | null>(null);
+
   readonly estados: { valor: FiltroEstado; etiqueta: string }[] = [
     { valor: '', etiqueta: 'Todas' },
     { valor: 'PENDIENTE_PAGO', etiqueta: 'Pendientes de pago' },
@@ -130,7 +133,9 @@ export class ReservasAdminComponent implements OnInit {
 
   pagar(r: ReservaAdmin): void {
     if (!confirm(`¿Marcar como pagada la reserva ${r.codigo} (mesa ${r.stand.codigo})?`)) return;
-    this.ejecutar(r, this.api.marcarPagada(r.id), `Reserva ${r.codigo} marcada como pagada.`);
+    this.ejecutar(r, this.api.marcarPagada(r.id), `Reserva ${r.codigo} marcada como pagada.`, () =>
+      this.confirmacion.set(r),
+    );
   }
 
   extender(r: ReservaAdmin): void {
@@ -187,7 +192,7 @@ export class ReservasAdminComponent implements OnInit {
     });
   }
 
-  // ───────────── Aviso por WhatsApp ─────────────
+  // ───────────── Aviso por WhatsApp (mesa liberada) ─────────────
 
   puedeAvisar(r: ReservaAdmin): boolean {
     return (r.estado === 'VENCIDA' || r.estado === 'CANCELADA') && !!r.titular;
@@ -213,6 +218,40 @@ export class ReservasAdminComponent implements OnInit {
 
   whatsappAviso(p: PersonaReserva, a: AvisoLiberacion): string {
     return `${this.whatsapp(p)}?text=${encodeURIComponent(this.mensajeLiberacion(p, a))}`;
+  }
+
+  // ───────────── Confirmación de pago por WhatsApp ─────────────
+
+  puedeConfirmar(r: ReservaAdmin): boolean {
+    return r.estado === 'CONFIRMADA' && !!r.titular;
+  }
+
+  abrirConfirmacion(r: ReservaAdmin): void {
+    this.confirmacion.set(r);
+  }
+
+  cerrarConfirmacion(): void {
+    this.confirmacion.set(null);
+  }
+
+  mensajePago(r: ReservaAdmin): string {
+    const lineas = [
+      'YUKAWAII FEST 2026 - RESERVA DE MESA',
+      'Estado: PAGADA',
+      `Código: ${r.codigo}`,
+      `Mesa: ${r.stand.codigo} (${r.stand.sector})`,
+      `Categoría: ${r.stand.categoria}`,
+      `Monto: Bs ${r.precio}`,
+    ];
+    if (r.titular) lineas.push(`Titular: ${r.titular.nombreComercial} (@${r.titular.instagram})`);
+    if (r.companero) lineas.push(`Compañero: ${r.companero.nombreComercial} (@${r.companero.instagram})`);
+    lineas.push('Fecha del evento: 14 y 15 de noviembre, Hotel Asturias, Santa Cruz');
+    return lineas.join('\n');
+  }
+
+  whatsappPago(p: PersonaReserva, r: ReservaAdmin): string {
+    const texto = `Hola ${p.nombreComercial}, ¡tu pago fue confirmado!\n\n${this.mensajePago(r)}\n\n¡Nos vemos en el festival!`;
+    return `${this.whatsapp(p)}?text=${encodeURIComponent(texto)}`;
   }
 
   // ───────────── Ayudas de vista ─────────────

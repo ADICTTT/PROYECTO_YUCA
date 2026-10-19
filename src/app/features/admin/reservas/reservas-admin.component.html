@@ -169,6 +169,12 @@
                     <i class="fa-solid fa-check mr-1"></i>Marcar pagada
                   </button>
                 }
+                @if (puedeConfirmar(r)) {
+                  <button type="button" (click)="abrirConfirmacion(r)"
+                    class="bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2">
+                    <i class="fa-brands fa-whatsapp mr-1 text-[#7B8E3D]"></i>Enviar confirmación
+                  </button>
+                }
                 @if (puedeExtender(r)) {
                   <button type="button" (click)="extender(r)" [disabled]="trabajando() === r.id"
                     class="bg-[#F4C453] text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2 disabled:opacity-60">
@@ -234,6 +240,52 @@
 
         <div class="flex justify-end pt-2 border-t-2 border-[#2C221E]/15">
           <button type="button" (click)="cerrarAviso()"
+            class="px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Ventana: enviar por WhatsApp la confirmación de pago -->
+  @if (confirmacion(); as k) {
+    <div class="fixed inset-0 bg-[#2C221E]/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div
+        class="bg-[#FFF9E6] rounded-[2rem] max-w-md w-full p-6 sm:p-8 space-y-4 border-4 border-[#2C221E] shadow-[6px_6px_0px_0px_rgba(44,34,30,1)]">
+        <div class="flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-[#7B8E3D] text-2xl"></i>
+          <h2 class="text-xl font-black text-[#2C221E]">Enviar confirmación de pago</h2>
+        </div>
+
+        <p class="text-xs font-semibold text-[#5C5046]">
+          Se abrirá WhatsApp con el mensaje ya escrito; solo tienes que enviarlo.
+        </p>
+
+        <div class="bg-white border-2 border-[#F4C453] rounded-2xl p-4">
+          <p class="text-xs font-black text-[#5C5046] uppercase mb-2">Mensaje</p>
+          <pre class="whitespace-pre-wrap break-words font-sans text-xs font-bold text-[#2C221E]">{{ mensajePago(k) }}</pre>
+        </div>
+
+        <div class="space-y-2">
+          @if (k.titular; as t) {
+            <a [href]="whatsappPago(t, k)" target="_blank" rel="noopener"
+              class="flex items-center justify-center gap-2 px-5 py-3 bg-[#7B8E3D] text-white font-black text-xs rounded-2xl border-2 border-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>Enviar a {{ t.nombreComercial }} (titular)</span>
+            </a>
+          }
+          @if (k.companero; as c) {
+            <a [href]="whatsappPago(c, k)" target="_blank" rel="noopener"
+              class="flex items-center justify-center gap-2 px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E]">
+              <i class="fa-brands fa-whatsapp text-[#7B8E3D]"></i>
+              <span>Enviar a {{ c.nombreComercial }} (compañero)</span>
+            </a>
+          }
+        </div>
+
+        <div class="flex justify-end pt-2 border-t-2 border-[#2C221E]/15">
+          <button type="button" (click)="cerrarConfirmacion()"
             class="px-5 py-3 bg-white text-[#2C221E] font-black text-xs rounded-2xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 transition cursor-pointer">
             Cerrar
           </button>

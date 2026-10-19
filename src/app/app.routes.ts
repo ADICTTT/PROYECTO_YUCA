@@ -13,12 +13,20 @@ export const routes: Routes = [
   { path: 'registro-artista', component: ArtistRegisterComponent },
   { path: 'login', component: LoginComponent },
   {
+    // Pública y sin login: solo arma el mensaje de WhatsApp, no guarda nada en base de datos
+    path: 'meet-greet',
+    loadComponent: () =>
+      import('./features/public/meet-greet-publico/meet-greet-publico.component').then(
+        m => m.MeetGreetPublicoComponent
+      ),
+  },
+  {
     // Pública: el propio componente decide qué mostrar (visitante, expositor, cerrado, mapa)
     path: 'mesas',
     loadComponent: () =>
       import('./features/expositor/mesas/mesas.component').then(m => m.MesasComponent),
   },
-  
+
   // Rutas del Administrador (Protegidas)
   {
     path: 'admin/postulaciones',
@@ -57,5 +65,5 @@ export const routes: Routes = [
   },
 
   // Comodín para rutas no encontradas (debe ir siempre al final)
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];
