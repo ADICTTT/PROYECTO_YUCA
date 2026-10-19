@@ -77,27 +77,39 @@ export class MesasComponent implements OnInit {
   readonly companero = signal<CompaneroBusqueda | null>(null);
   readonly enviando = signal(false);
 
-  // Administrador: reserva en nombre de un perfil aprobado
+  // Administrador: reserva en nombre de un perfil aprobado (y su compañero)
   readonly esAdmin = signal(false);
   readonly perfilesAprobados = signal<Perfil[]>([]);
   readonly cargandoPerfiles = signal(false);
   readonly titular = signal<Perfil | null>(null);
   readonly busquedaTitular = signal('');
+  readonly companeroAdmin = signal<Perfil | null>(null);
+  readonly busquedaCompanero = signal('');
+  readonly yaPago = signal(false);
 
-  readonly candidatos = computed(() => {
+  private filtrarPerfiles(q: string, excluirId: number | null): Perfil[] {
     const m = this.mesa();
     if (!m) return [];
-    const q = this.busquedaTitular().trim().toLowerCase();
+    const texto = q.trim().toLowerCase();
     return this.perfilesAprobados()
       .filter((p) => p.categoria === m.categoria)
+      .filter((p) => p.id !== excluirId)
       .filter(
         (p) =>
-          !q ||
-          p.nombreComercial.toLowerCase().includes(q) ||
-          p.instagram.toLowerCase().includes(q),
+          !texto ||
+          p.nombreComercial.toLowerCase().includes(texto) ||
+          p.instagram.toLowerCase().includes(texto),
       )
       .slice(0, 8);
-  });
+  }
+
+  readonly candidatos = computed(() =>
+    this.filtrarPerfiles(this.busquedaTitular(), this.companeroAdmin()?.id ?? null),
+  );
+
+  readonly candidatosCompanero = computed(() =>
+    this.filtrarPerfiles(this.busquedaCompanero(), this.titular()?.id ?? null),
+  );
 
   // Solo es true justo después de confirmar la reserva (no al recargar la página)
   readonly recienReservada = signal(false);
@@ -334,16 +346,22 @@ export class MesasComponent implements OnInit {
     this.exito.set('');
     this.mesa.set(m);
     this.companero.set(null);
-    this.titular.set(null);
-    this.busquedaTitular.set('');
+    this.limpiarSeleccionAdmin();
     if (this.esAdmin()) this.cargarPerfilesAprobados();
   }
 
   cerrarPanel(): void {
     this.mesa.set(null);
     this.companero.set(null);
+    this.limpiarSeleccionAdmin();
+  }
+
+  private limpiarSeleccionAdmin(): void {
     this.titular.set(null);
     this.busquedaTitular.set('');
+    this.companeroAdmin.set(null);
+    this.busquedaCompanero.set('');
+    this.yaPago.set(false);
   }
 
   cerrarAvisoReservada(): void {
@@ -380,31 +398,59 @@ export class MesasComponent implements OnInit {
     this.titular.set(null);
   }
 
+  escribirCompanero(valor: string): void {
+    this.busquedaCompanero.set(valor);
+  }
+
+  elegirCompaneroAdmin(p: Perfil): void {
+    this.companeroAdmin.set(p);
+    this.busquedaCompanero.set('');
+  }
+
+  quitarCompaneroAdmin(): void {
+    this.companeroAdmin.set(null);
+  }
+
+  alternarYaPago(): void {
+    this.yaPago.set(!this.yaPago());
+  }
+
   confirmarAdmin(): void {
     const m = this.mesa();
     const t = this.titular();
     if (!m || !t || this.enviando()) return;
+    const c = m.categoria === 'ILUSTRADORES' ? this.companeroAdmin() : null;
+    const pagada = this.yaPago();
+
     this.enviando.set(true);
     this.aviso.set('');
     this.exito.set('');
 
-    this.reservas.crearManual({ standId: m.id, titularPerfilId: t.id }).subscribe({
-      next: () => {
-        this.enviando.set(false);
-        this.exito.set(`Reserva creada: mesa ${m.codigo} para ${t.nombreComercial}.`);
-        this.cerrarPanel();
-        this.recargarMapa();
-      },
-      error: (e) => {
-        const err = leerErrorApi(e);
-        this.enviando.set(false);
-        this.aviso.set(err.message);
-        if (err.code === 'MESA_TOMADA') {
+    this.reservas
+      .crearManual({
+        standId: m.id,
+        titularPerfilId: t.id,
+        ...(c ? { companeroPerfilId: c.id } : {}),
+        ...(pagada ? { pagada: true } : {}),
+      })
+      .subscribe({
+        next: () => {
+          this.enviando.set(false);
+          const quienes = c ? `${t.nombreComercial} y ${c.nombreComercial}` : t.nombreComercial;
+          this.exito.set(`Reserva creada: mesa ${m.codigo} para ${quienes}${pagada ? ' (ya pagada)' : ''}.`);
           this.cerrarPanel();
           this.recargarMapa();
-        }
-      },
-    });
+        },
+        error: (e) => {
+          const err = leerErrorApi(e);
+          this.enviando.set(false);
+          this.aviso.set(err.message);
+          if (err.code === 'MESA_TOMADA') {
+            this.cerrarPanel();
+            this.recargarMapa();
+          }
+        },
+      });
   }
 
   // ───────────── Reservar (expositor) ─────────────

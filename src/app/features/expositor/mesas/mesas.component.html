@@ -351,8 +351,8 @@
               <p class="text-sm text-[#5C5046] font-bold mb-4">{{ s.descripcion }}</p>
             }
 
-            @if (esAdmin()) {
-              <!-- Administrador: elegir el perfil titular -->
+                        @if (esAdmin()) {
+              <!-- Administrador: elegir titular y compañero -->
               <div class="border-t-2 border-[#2C221E] pt-4 mb-4">
                 <label class="block text-xs font-black text-[#5C5046] uppercase mb-1" for="titular">
                   Titular (perfil aprobado)
@@ -400,10 +400,61 @@
                     </ul>
                   }
                 }
-                <p class="mt-2 text-xs font-bold text-[#5C5046]">
-                  La reserva queda pendiente de pago. Si el perfil ya tiene mesa, el sistema lo rechaza.
-                </p>
               </div>
+
+              @if (esArtista()) {
+                <div class="border-t-2 border-[#2C221E] pt-4 mb-4">
+                  <label class="block text-xs font-black text-[#5C5046] uppercase mb-1" for="companeroAdmin">
+                    Compañero (opcional)
+                  </label>
+
+                  @if (companeroAdmin(); as c) {
+                    <div class="flex items-center justify-between bg-[#FFF9E6] border-2 border-[#2C221E] rounded-2xl px-4 py-2">
+                      <div>
+                        <p class="font-black text-[#2C221E] text-sm">{{ c.nombreComercial }}</p>
+                        <p class="text-xs font-bold text-[#5C5046]">&#64;{{ c.instagram }}</p>
+                      </div>
+                      <button type="button" (click)="quitarCompaneroAdmin()" aria-label="Quitar compañero" class="text-[#E85A4F]">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                      </button>
+                    </div>
+                  } @else {
+                    <input
+                      id="companeroAdmin"
+                      type="text"
+                      autocomplete="off"
+                      [value]="busquedaCompanero()"
+                      (input)="escribirCompanero($any($event.target).value)"
+                      placeholder="Busca por nombre o Instagram"
+                      class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]"
+                    />
+                    @if (!cargandoPerfiles()) {
+                      <ul class="mt-2 max-h-56 overflow-auto border-2 border-[#2C221E] rounded-2xl bg-white">
+                        @for (p of candidatosCompanero(); track p.id) {
+                          <li>
+                            <button type="button" (click)="elegirCompaneroAdmin(p)"
+                              class="w-full text-left px-4 py-2 border-b border-[#F4C453] last:border-b-0 hover:bg-[#FFF9E6]">
+                              <span class="block font-black text-sm text-[#2C221E]">{{ p.nombreComercial }}</span>
+                              <span class="block text-xs font-bold text-[#5C5046]">&#64;{{ p.instagram }}</span>
+                            </button>
+                          </li>
+                        } @empty {
+                          <li class="px-4 py-3 text-xs font-bold text-[#5C5046]">Sin resultados.</li>
+                        }
+                      </ul>
+                    }
+                  }
+                </div>
+              }
+
+              <label class="flex items-center gap-3 bg-white border-2 border-[#F4C453] rounded-2xl px-4 py-3 mb-4 cursor-pointer">
+                <input type="checkbox" [checked]="yaPago()" (change)="alternarYaPago()" class="w-5 h-5 accent-[#7B8E3D]" />
+                <span class="text-sm font-bold text-[#2C221E]">Ya pagó (marcar como pagada)</span>
+              </label>
+
+              <p class="mb-4 text-xs font-bold text-[#5C5046]">
+                Si alguno de los perfiles ya tiene mesa, el sistema rechaza la reserva. Solo el titular paga.
+              </p>
 
               <button type="button" (click)="confirmarAdmin()" [disabled]="enviando() || !titular()"
                 class="w-full bg-[#E85A4F] text-white font-black uppercase rounded-2xl border-2 border-[#2C221E] px-6 py-3 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] disabled:opacity-60">
