@@ -28,6 +28,12 @@
     <span class="flex items-center gap-2"><span class="w-4 h-4 rounded border-2 border-[#2C221E] bg-[#D9C2F0]"></span>Comida</span>
 
     <div class="flex flex-wrap items-center gap-2 ml-auto">
+      <button type="button" (click)="alternarModoMesas()"
+        [class]="modoMesas
+          ? 'px-3 h-8 bg-[#2C221E] text-[#F4C453] rounded-xl border-2 border-[#2C221E] cursor-pointer'
+          : 'px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer'">
+        <i class="fa-solid fa-hand-pointer mr-1"></i>Mover mesas: {{ modoMesas ? 'SÍ' : 'NO' }}
+      </button>
       <button type="button" (click)="alejar()" aria-label="Alejar"
         class="w-8 h-8 grid place-items-center bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer">
         <i class="fa-solid fa-minus"></i>
@@ -47,6 +53,10 @@
           : 'px-3 h-8 bg-white text-[#2C221E] rounded-xl border-2 border-[#2C221E] hover:bg-[#F4C453]/30 cursor-pointer'">
         <i class="fa-solid fa-map mr-1"></i>Plano
       </button>
+      <button *ngIf="standSeleccionado" type="button" (click)="irAlPanel()"
+        class="md:hidden px-3 h-8 bg-[#F4C453] text-[#2C221E] rounded-xl border-2 border-[#2C221E] cursor-pointer">
+        <i class="fa-solid fa-sliders mr-1"></i>Configurar
+      </button>
       <button *ngIf="standSeleccionado" type="button" (click)="quitarSeleccion()"
         class="px-3 h-8 bg-[#E85A4F] text-white rounded-xl border-2 border-[#2C221E] cursor-pointer">
         <i class="fa-solid fa-xmark mr-1"></i>Quitar selección
@@ -55,18 +65,18 @@
   </div>
 
   <p class="px-4 pb-2 text-[11px] font-semibold text-[#5C5046]">
-    Mueve las mesas sobre el plano y toca "Guardar cambios": los artistas verán el mismo plano con tus mesas encima. La rueda baja la página. Ctrl + rueda: zoom. Arrastra el fondo para mover de lado. Clic en el fondo o Esc: quitar selección. En celular se puede ver y hacer zoom con + y −; arrastrar mesas es solo en PC.
+    Mueve las mesas sobre el plano y toca "Guardar cambios": los artistas verán el mismo plano con tus mesas encima. PC: la rueda baja la página, Ctrl + rueda hace zoom y arrastrar el fondo mueve de lado. Celular: enciende "Mover mesas" para arrastrar una mesa con el dedo; apagado, el dedo desplaza la página. Zoom con + y −.
   </p>
 
   <!-- Contenedor del mapa y panel -->
   <div class="flex flex-col md:flex-row md:items-start relative">
     <!-- Lienzo SVG interactivo: su altura cubre todo el largo del mapa -->
     <svg #lienzo
-      class="w-full md:w-auto md:flex-1 bg-[#FFFDF5] cursor-grab active:cursor-grabbing"
+      class="w-full md:w-auto md:flex-1 bg-[#FFFDF5] cursor-grab active:cursor-grabbing select-none"
       [style.height.px]="alturaLienzo"
-      style="touch-action: pan-y;"
-      (mousedown)="iniciarPan($event)"
-      (mousemove)="moverPan($event)" (mouseup)="detenerArrastre()" (mouseleave)="cancelarArrastre()"
+      [style.touch-action]="modoMesas ? 'none' : 'pan-y'"
+      (pointerdown)="iniciarPan($event)"
+      (pointermove)="moverPuntero($event)" (pointerup)="detenerArrastre()" (pointercancel)="cancelarArrastre()"
       (wheel)="onWheel($event)">
 
       <g [attr.transform]="'translate(' + panX + ',' + panY + ') scale(' + zoom + ')'">
@@ -89,7 +99,7 @@
         <!-- Stands (dinámicos y arrastrables) -->
         <g *ngFor="let stand of stands"
           [attr.transform]="'translate(' + stand.posicionX + ',' + stand.posicionY + ') rotate(' + stand.rotacion + ')'"
-          (mousedown)="iniciarArrastreStand(stand, $event)" (click)="seleccionarStand(stand, $event)"
+          (pointerdown)="iniciarArrastreStand(stand, $event)"
           class="cursor-pointer">
 
           <rect [attr.width]="stand.ancho" [attr.height]="stand.alto"
@@ -110,7 +120,8 @@
     </svg>
 
     <!-- Panel de configuración (a un lado en PC y te sigue al bajar; debajo del lienzo en celular) -->
-    <div class="w-full md:w-80 md:shrink-0 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto bg-white border-t-4 md:border-t-0 md:border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10"
+    <div id="panel-mesa"
+      class="w-full md:w-80 md:shrink-0 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto bg-white border-t-4 md:border-t-0 md:border-l-4 border-[#2C221E] p-5 flex flex-col gap-2 z-10"
       *ngIf="standSeleccionado">
       <div class="flex items-center justify-between border-b-2 border-[#2C221E] pb-2 mb-1">
         <h3 class="text-lg font-black text-[#2C221E] uppercase">Configurar mesa</h3>
@@ -136,13 +147,49 @@
         <option value="COMIDA">Comida (lila)</option>
       </select>
 
-      <label class="block text-xs font-black text-[#5C5046] uppercase">Ancho</label>
-      <input type="number" [(ngModel)]="standSeleccionado.ancho"
+      <div class="border-t-2 border-[#2C221E]/15 pt-2 mt-1">
+        <p class="text-xs font-black text-[#2C221E] uppercase">Medidas reales (las ve el público)</p>
+        <p class="text-[11px] font-semibold text-[#5C5046]">En centímetros. El dibujo en el mapa se ajusta solo.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-black text-[#5C5046] uppercase">Largo (cm)</label>
+          <input type="number" [(ngModel)]="medidaLargo" (ngModelChange)="recalcularDibujo()" placeholder="200"
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        </div>
+        <div>
+          <label class="block text-xs font-black text-[#5C5046] uppercase">Ancho (cm)</label>
+          <input type="number" [(ngModel)]="medidaAncho" (ngModelChange)="recalcularDibujo()" placeholder="90"
+            class="w-full bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+        </div>
+      </div>
+      <p class="text-[11px] font-semibold text-[#5C5046]">
+        Dibujo en el mapa: {{ standSeleccionado.ancho }} × {{ standSeleccionado.alto }} (solo visual)
+      </p>
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Sillas</label>
+      <input type="number" [(ngModel)]="standSeleccionado.sillas" min="0" placeholder="Ej: 2"
         class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
 
-      <label class="block text-xs font-black text-[#5C5046] uppercase">Alto</label>
-      <input type="number" [(ngModel)]="standSeleccionado.alto"
-        class="bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F]">
+      <div class="border-t-2 border-[#2C221E]/15 pt-2 mt-1">
+        <p class="text-xs font-black text-[#2C221E] uppercase">Servicios (los ve el público)</p>
+      </div>
+
+      <label class="flex items-center gap-3 bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 cursor-pointer">
+        <input type="checkbox" [(ngModel)]="standSeleccionado.incluyeMerienda" class="w-5 h-5 accent-[#7B8E3D]">
+        <span class="text-sm font-bold text-[#2C221E]">Incluye merienda</span>
+      </label>
+
+      <label class="flex items-center gap-3 bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 cursor-pointer">
+        <input type="checkbox" [(ngModel)]="standSeleccionado.bajoTecho" class="w-5 h-5 accent-[#7B8E3D]">
+        <span class="text-sm font-bold text-[#2C221E]">Está bajo techo</span>
+      </label>
+
+      <label class="block text-xs font-black text-[#5C5046] uppercase">Descripción (opcional)</label>
+      <textarea [(ngModel)]="standSeleccionado.descripcion" rows="3" maxlength="300"
+        placeholder="Ej: Junto a la entrada, con enchufe cerca"
+        class="shrink-0 min-h-[5rem] bg-white border-2 border-[#F4C453] rounded-2xl px-3 py-2 font-bold text-[#2C221E] focus:outline-none focus:border-[#E85A4F] resize-none"></textarea>
 
       <label class="block text-xs font-black text-[#5C5046] uppercase">Rotación (°)</label>
       <input type="number" [(ngModel)]="standSeleccionado.rotacion"

@@ -17,6 +17,11 @@ export interface Stand {
   rotacion: number;
   categoria: 'ILUSTRADORES' | 'EMPRENDEDORES' | 'COMIDA';
   estado: string;
+  medidas?: string | null;
+  sillas?: number | null;
+  incluyeMerienda?: boolean;
+  bajoTecho?: boolean;
+  descripcion?: string | null;
   reservas?: any[];
 }
 

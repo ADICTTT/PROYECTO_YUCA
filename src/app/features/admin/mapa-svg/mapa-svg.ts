@@ -22,6 +22,10 @@ const CLAVES_SECTOR: Record<number, string> = {
 
 const MARGEN = 20;
 
+// Unidades del mapa por cada cm real (200 cm = 60 unidades). Cámbiala cuando tengas el mapa escalado.
+const ESCALA = 0.3;
+const TAM_MIN = 15;
+
 @Component({
   selector: 'app-mapa-svg',
   standalone: true,
@@ -41,6 +45,14 @@ export class MapaSvg implements OnInit {
   sectorActualId: number = 1;
   stands: Stand[] = [];
   standSeleccionado: Stand | null = null;
+
+  // Medidas reales de la mesa seleccionada (cm)
+  medidaLargo: number | null = null;
+  medidaAncho: number | null = null;
+  private mesaVertical = false;
+
+  // En celular: true = el dedo arrastra mesas; false = el dedo desplaza la página
+  modoMesas = false;
 
   readonly ZOOM_MIN = 0.3;
   readonly ZOOM_MAX = 2.5;
@@ -120,13 +132,52 @@ export class MapaSvg implements OnInit {
     return Math.max(4, Math.min(alto * 0.55, (ancho * 0.9) / largo));
   }
 
-  seleccionarStand(stand: Stand, event: MouseEvent): void {
-    event.stopPropagation();
+  // ───────────── Selección y medidas reales ─────────────
+
+  seleccionar(stand: Stand): void {
+    if (this.standSeleccionado === stand) return;
     this.standSeleccionado = stand;
+    this.mesaVertical = Number(stand.alto) > Number(stand.ancho);
+
+    // Lee "200 × 90 cm" si ya estaba guardado
+    const m = String(stand.medidas ?? '').match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)/i);
+    if (m) {
+      this.medidaLargo = Number(m[1].replace(',', '.'));
+      this.medidaAncho = Number(m[2].replace(',', '.'));
+    } else {
+      this.medidaLargo = null;
+      this.medidaAncho = null;
+    }
   }
 
   quitarSeleccion(): void {
     this.standSeleccionado = null;
+  }
+
+  // Recalcula el dibujo a partir de las medidas reales
+  recalcularDibujo(): void {
+    const s = this.standSeleccionado;
+    const largo = Number(this.medidaLargo);
+    const ancho = Number(this.medidaAncho);
+    if (!s || !(largo > 0) || !(ancho > 0)) return;
+
+    const a = Math.max(TAM_MIN, Math.round(largo * ESCALA));
+    const b = Math.max(TAM_MIN, Math.round(ancho * ESCALA));
+    if (this.mesaVertical) {
+      s.ancho = b;
+      s.alto = a;
+    } else {
+      s.ancho = a;
+      s.alto = b;
+    }
+  }
+
+  alternarModoMesas(): void {
+    this.modoMesas = !this.modoMesas;
+  }
+
+  irAlPanel(): void {
+    document.getElementById('panel-mesa')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   @HostListener('document:keydown.escape')
@@ -252,9 +303,18 @@ export class MapaSvg implements OnInit {
     return Math.round(this.zoom * 100);
   }
 
-  // ───────────── Arrastre del fondo ─────────────
+  // ───────────── Arrastre (mouse y dedo, con eventos de puntero) ─────────────
 
-  iniciarPan(event: MouseEvent): void {
+  private capturar(event: PointerEvent): void {
+    try {
+      this.lienzo?.nativeElement.setPointerCapture(event.pointerId);
+    } catch {
+      /* si el navegador no puede capturar, el arrastre sigue funcionando dentro del lienzo */
+    }
+  }
+
+  iniciarPan(event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
     const el = event.target as Element;
     const esFondo = el.tagName === 'svg' || el.getAttribute('data-fondo') === 'true';
     if (!esFondo) return;
@@ -263,9 +323,10 @@ export class MapaSvg implements OnInit {
     this.movioElFondo = false;
     this.startX = event.clientX - this.panX;
     this.startY = event.clientY - this.panY;
+    this.capturar(event);
   }
 
-  moverPan(event: MouseEvent): void {
+  moverPuntero(event: PointerEvent): void {
     if (this.isDraggingCanvas) {
       const nuevoX = event.clientX - this.startX;
       if (Math.abs(nuevoX - this.panX) > 2) {
@@ -274,7 +335,7 @@ export class MapaSvg implements OnInit {
       this.panX = nuevoX;
       this.limitarPan();
     } else if (this.isDraggingStand && this.standArrastrando) {
-      const gridSize = 10;
+      const gridSize = 1;
       const x = (event.clientX - this.dragOffsetX - this.panX) / this.zoom;
       const y = (event.clientY - this.dragOffsetY - this.panY) / this.zoom;
 
@@ -290,25 +351,29 @@ export class MapaSvg implements OnInit {
     if (this.isDraggingCanvas && !this.movioElFondo) {
       this.standSeleccionado = null;
     }
-    this.isDraggingCanvas = false;
-    this.isDraggingStand = false;
-    this.standArrastrando = null;
+    this.cancelarArrastre();
   }
 
-  // Si el mouse sale del lienzo, se corta cualquier arrastre
+  // Corta cualquier arrastre (también cuando el navegador toma el gesto para desplazar la página)
   cancelarArrastre(): void {
     this.isDraggingCanvas = false;
     this.isDraggingStand = false;
     this.standArrastrando = null;
   }
 
-  iniciarArrastreStand(stand: Stand, event: MouseEvent): void {
+  iniciarArrastreStand(stand: Stand, event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
     event.stopPropagation();
+    this.seleccionar(stand);
+
+    // Con el dedo, solo se arrastra si "Mover mesas" está encendido
+    if (event.pointerType === 'touch' && !this.modoMesas) return;
+
     this.isDraggingStand = true;
     this.standArrastrando = stand;
-    this.standSeleccionado = stand;
     this.dragOffsetX = event.clientX - (Number(stand.posicionX) * this.zoom + this.panX);
     this.dragOffsetY = event.clientY - (Number(stand.posicionY) * this.zoom + this.panY);
+    this.capturar(event);
   }
 
   // ───────────── Guardado ─────────────
@@ -332,19 +397,42 @@ export class MapaSvg implements OnInit {
   actualizarStandSeleccionado(): void {
     if (!this.standSeleccionado) return;
 
+    const largo = Number(this.medidaLargo);
+    const ancho = Number(this.medidaAncho);
+    const tieneMedidas = largo > 0 && ancho > 0;
+    if (tieneMedidas) this.recalcularDibujo();
+
+    const s = this.standSeleccionado;
+    const sillas = s.sillas === null || s.sillas === undefined || (s.sillas as any) === ''
+      ? null
+      : Number(s.sillas);
+    const descripcion = String(s.descripcion ?? '').trim().slice(0, 300) || null;
+
     // Forzar conversión a número para evitar que se envíen como string
     const standClean = {
-      ...this.standSeleccionado,
-      precio: Number(this.standSeleccionado.precio),
-      ancho: Number(this.standSeleccionado.ancho),
-      alto: Number(this.standSeleccionado.alto),
-      rotacion: Number(this.standSeleccionado.rotacion),
-      posicionX: Number(this.standSeleccionado.posicionX),
-      posicionY: Number(this.standSeleccionado.posicionY)
+      ...s,
+      precio: Number(s.precio),
+      ancho: Number(s.ancho),
+      alto: Number(s.alto),
+      rotacion: Number(s.rotacion),
+      posicionX: Number(s.posicionX),
+      posicionY: Number(s.posicionY),
+      sillas,
+      incluyeMerienda: !!s.incluyeMerienda,
+      bajoTecho: !!s.bajoTecho,
+      descripcion,
+      medidas: tieneMedidas ? `${largo} × ${ancho} cm` : (s.medidas ?? null)
     };
 
     this.standService.updateStand(standClean.id, standClean).subscribe({
-      next: () => alert('Stand actualizado correctamente'),
+      next: () => {
+        s.medidas = standClean.medidas;
+        s.sillas = standClean.sillas;
+        s.incluyeMerienda = standClean.incluyeMerienda;
+        s.bajoTecho = standClean.bajoTecho;
+        s.descripcion = standClean.descripcion;
+        alert('Stand actualizado correctamente');
+      },
       error: (err) => alert(err.error?.message || 'Error al actualizar')
     });
   }
