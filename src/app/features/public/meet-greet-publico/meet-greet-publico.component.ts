@@ -33,15 +33,17 @@ export class MeetGreetPublicoComponent {
   // ====== AJUSTES ======
   /** Número destino con código de país de Bolivia (+591). */
   readonly numeroWhatsApp = '59162986390';
-  /** Cupos totales (solo informativo: no hay backend que los descuente). */
-  readonly cupos = 24;
+  /** Cupos totales. */
+  readonly cuposTotales = 24;
+  /**
+   * CUPOS YA RESERVADOS: actualízalo a mano cada vez que confirmes un pago
+   * y vuelve a desplegar. Al llegar a 24 se cierra la reserva sola.
+   */
+  readonly cuposReservados = 0;
   /** Ruta de la imagen del QR de pago (ej: 'qr-pago.png'). Vacío = no se muestra. */
   readonly qrPagoUrl = '';
 
-  /**
-   * Fotos: colócalas en la carpeta de archivos estáticos (public/ en Angular 18+,
-   * src/assets/ en versiones anteriores; en ese caso usa 'assets/Dee.jpg').
-   */
+  /** Fotos en la carpeta public/ (el nombre debe coincidir exacto, mayúsculas incluidas). */
   readonly invitados: Invitado[] = [
     {
       nombre: 'Dee',
@@ -49,7 +51,7 @@ export class MeetGreetPublicoComponent {
       serie: 'Metal Family',
       texto:
         'Conoce a quien da voz a Dee en el doblaje de Metal Family. Conversa, tómate fotos y llévate un recuerdo de este encuentro.',
-      imagen: 'Dee.jpg',
+      imagen: '/images/Dee.png',
     },
     {
       nombre: 'Glam',
@@ -57,7 +59,7 @@ export class MeetGreetPublicoComponent {
       serie: 'Metal Family',
       texto:
         'Acceso al espacio exclusivo de interacción: conversa, tómate fotografías y solicita autógrafos o saludos personalizados según tu pase.',
-      imagen: 'glam.png',
+      imagen: '/images/glam.png',
     },
   ];
 
@@ -73,9 +75,18 @@ export class MeetGreetPublicoComponent {
   correo = '';
   acepta = false;
   error = '';
+  enviando = false;
 
   get config(): PaseConfig {
     return this.PASES[this.pase];
+  }
+
+  get cuposRestantes(): number {
+    return Math.max(0, this.cuposTotales - this.cuposReservados);
+  }
+
+  get agotado(): boolean {
+    return this.cuposRestantes === 0;
   }
 
   elegirPase(tipo: TipoPase): void {
@@ -84,6 +95,12 @@ export class MeetGreetPublicoComponent {
 
   enviarWhatsApp(): void {
     this.error = '';
+
+    if (this.agotado) {
+      this.error = 'Los cupos están agotados.';
+      return;
+    }
+
     const nombre = this.nombre.trim();
     const telefono = this.telefono.replace(/\D/g, '');
     const correo = this.correo.trim();
@@ -114,7 +131,7 @@ export class MeetGreetPublicoComponent {
 
     const mensaje =
       `¡Hola Proyecto Yuca! 🌸\n` +
-      `Quiero reservar un cupo para el *Meet & Greet* (público general).\n\n` +
+      `Quiero reservar un cupo para el *Meet & Greet* (14 y 15 de noviembre, Hotel Asturias).\n\n` +
       `👤 *Nombre:* ${nombre}\n` +
       `📱 *WhatsApp:* ${telefono}\n` +
       (correo ? `✉️ *Correo:* ${correo}\n` : '') +
@@ -124,6 +141,13 @@ export class MeetGreetPublicoComponent {
       `Acepto las políticas de reserva. Por favor confírmenme si hay cupo y envíenme los datos / QR para el pago. ¡Gracias!`;
 
     const url = `https://wa.me/${this.numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
+
+    // Evita doble clic (mensajes duplicados)
+    this.enviando = true;
+    setTimeout(() => (this.enviando = false), 4000);
+
+    const ventana = window.open(url, '_blank');
+    // Si el navegador bloquea la ventana (común en celulares), navega directo
+    if (!ventana) window.location.href = url;
   }
 }

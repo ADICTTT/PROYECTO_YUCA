@@ -19,16 +19,13 @@ export const routes: Routes = [
       import('./features/expositor/mesas/mesas.component').then(m => m.MesasComponent),
   },
 
-  // Meet & Greet: TEMPORAL, solo admins mientras no se abre al público.
-  // Para abrirlo: borrar canActivate y data.
+    // Meet & Greet: abierto al público
   {
     path: 'meet-greet',
     loadComponent: () =>
       import('./features/public/meet-greet-publico/meet-greet-publico.component').then(
         m => m.MeetGreetPublicoComponent
       ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN'] },
   },
 
   // Rutas del Administrador (Protegidas)

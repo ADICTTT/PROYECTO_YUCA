@@ -9,15 +9,18 @@
       <h1 class="text-3xl sm:text-5xl font-black text-[#2C221E] tracking-tight leading-tight">
         Meet &amp; Greet <span class="text-[#E85A4F]">Metal Family</span>
       </h1>
+      <p class="max-w-2xl mx-auto text-base sm:text-lg font-bold text-[#2C221E]">
+        ¿¡Listos para conocer a Jim López y Adrián Cuenca!?
+      </p>
       <p class="max-w-2xl mx-auto text-sm sm:text-base font-semibold text-[#5C5046]">
-        Conoce a los invitados, elige tu pase y reserva tu cupo. No necesitas registrarte:
-        llenas tus datos y te llevamos a WhatsApp con el mensaje ya escrito.
+        ¡Ven a compartir una gran experiencia con ellos este 14 y 15 de noviembre en el
+        Hotel Asturias! Desde las 2 pm hasta las 9 pm.
       </p>
 
       <div class="flex flex-wrap justify-center gap-3 pt-2">
         <span class="inline-flex items-center gap-2 bg-[#FFFDF5] border-2 border-[#2C221E] rounded-2xl px-4 py-2 text-xs font-black text-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]">
           <i class="fa-solid fa-ticket text-[#E85A4F]"></i>
-          Solo {{ cupos }} cupos en total
+          Cupos limitados
         </span>
         <span class="inline-flex items-center gap-2 bg-[#FFFDF5] border-2 border-[#2C221E] rounded-2xl px-4 py-2 text-xs font-black text-[#2C221E] shadow-[3px_3px_0px_0px_rgba(44,34,30,1)]">
           <i class="fa-brands fa-whatsapp text-[#7B8E3D]"></i>
@@ -42,6 +45,7 @@
             <img
               [src]="inv.imagen"
               [alt]="'Foto de ' + inv.nombre"
+              loading="lazy"
               class="absolute inset-0 w-full h-full object-cover object-top"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-[#2C221E]/85 via-transparent to-transparent"></div>
@@ -228,7 +232,7 @@
       </button>
 
       <p class="text-[11px] text-center font-semibold text-[#5C5046]">
-        Envia el mensaje para hacer valida tu reserva.
+        Envía el mensaje para hacer válida tu reserva.
       </p>
     </div>
 

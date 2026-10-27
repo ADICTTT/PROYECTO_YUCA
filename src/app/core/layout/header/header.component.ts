@@ -35,7 +35,7 @@ export class HeaderComponent {
     { texto: 'Inicio', icono: 'fa-house', ruta: '/', fragmento: undefined },
     { texto: 'Próximo evento', icono: 'fa-calendar-days', ruta: '/', fragmento: 'proximo-evento' },
     // TEMPORAL: solo admins. Para abrirlo al público, quitar soloAdmin.
-    { texto: 'Meet & Greet', icono: 'fa-ticket', ruta: '/meet-greet', fragmento: undefined, soloAdmin: true },
+    { texto: 'Meet & Greet', icono: 'fa-ticket', ruta: '/meet-greet', fragmento: undefined, soloAdmin: false },
     { texto: 'Cómo participar', icono: 'fa-list-check', ruta: '/', fragmento: 'como-participar' },
     { texto: 'Ediciones pasadas', icono: 'fa-images', ruta: '/', fragmento: 'ediciones' },
   ];
