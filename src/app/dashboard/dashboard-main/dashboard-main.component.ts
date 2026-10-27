@@ -44,6 +44,34 @@ export class DashboardMainComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+
+  // Variable para guardar el perfil que se quiere eliminar (si es null, el modal está cerrado)
+  perfilAEliminar: any = null;
+
+  // Método que abre la confirmación (lo llama el botón de la tabla)
+  confirmarEliminacion(perfil: any) {
+    this.perfilAEliminar = perfil;
+  }
+
+  // Método que cancela y cierra el modal
+  cancelarEliminacion() {
+    this.perfilAEliminar = null;
+  }
+
+  // Método que ejecuta la eliminación real
+  ejecutarEliminacion() {
+    if (!this.perfilAEliminar) return;
+
+    this.profileService.eliminarPerfil(this.perfilAEliminar.id).subscribe({
+      next: () => {
+        this.perfilAEliminar = null; // Cerramos el modal
+        this.cargarPerfiles(); // Recargamos la lista
+      },
+      error: (error) => {
+        console.error('Error al eliminar el perfil', error);
+      }
+    });
+  }
   cerrarSesion(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
@@ -294,15 +322,15 @@ export class DashboardMainComponent implements OnInit {
 
     const mensaje = c.esReset
       ? `Hola ${c.nombre}, restablecimos tus credenciales de Proyecto Yuca.\n\n` +
-        `Usuario: ${c.usuario}\n` +
-        `Contraseña: ${c.password}\n\n` +
-        `Al ingresar, el sistema te pedirá crear una contraseña nueva.`
+      `Usuario: ${c.usuario}\n` +
+      `Contraseña: ${c.password}\n\n` +
+      `Al ingresar, el sistema te pedirá crear una contraseña nueva.`
       : `¡Hola ${c.nombre}! Tu perfil en Proyecto Yuca fue aprobado 🎉\n\n` +
-        `Ya puedes ingresar al sistema para elegir tu mesa:\n` +
-        `Usuario: ${c.usuario}\n` +
-        `Contraseña: ${c.password}\n\n` +
-        `Por seguridad, cambia tu contraseña al ingresar. ` +
-        `Síguenos también en el canal oficial para enterarte de las novedades.`;
+      `Ya puedes ingresar al sistema para elegir tu mesa:\n` +
+      `Usuario: ${c.usuario}\n` +
+      `Contraseña: ${c.password}\n\n` +
+      `Por seguridad, cambia tu contraseña al ingresar. ` +
+      `Síguenos también en el canal oficial para enterarte de las novedades.`;
 
     return `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
   }

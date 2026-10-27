@@ -92,4 +92,8 @@ export class ProfileService {
   cambiarEstado(id: number, estado: string): Observable<Perfil> {
     return this.http.patch<Perfil>(`${this.baseUrl}/${id}/estado`, { estado });
   }
+
+  eliminarPerfil(id: number): Observable<Perfil> {
+    return this.http.delete<Perfil>(`${this.baseUrl}/${id}`);
+  }
 }
