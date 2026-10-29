@@ -20,6 +20,10 @@
           class="bg-[#F4C453] text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)]">
           <i class="fa-solid fa-rotate mr-2"></i>Actualizar
         </button>
+                <button type="button" (click)="exportarCredenciales()" [disabled]="exportando() || cargando()"
+          class="bg-white text-[#2C221E] font-black uppercase text-xs rounded-2xl border-2 border-[#2C221E] px-4 py-2 shadow-[4px_4px_0px_0px_rgba(44,34,30,1)] disabled:opacity-60">
+          <i class="fa-solid fa-file-zipper mr-2"></i>{{ exportando() ? 'Generando...' : 'Exportar credenciales' }}
+        </button>
       </div>
     </div>
 

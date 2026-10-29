@@ -3,6 +3,10 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import { ProfileService } from '../../../core/services/profile.service';
+import { exportarCredenciales } from '../../../core/services/exportar-credenciales';
+import { environment } from 'src/environments/environment';
 import {
   CategoriaTipo,
   EstadoReserva,
@@ -28,6 +32,10 @@ interface AvisoLiberacion {
 })
 export class ReservasAdminComponent implements OnInit {
   private readonly api = inject(ReservasService);
+
+  private readonly perfilesApi = inject(ProfileService);
+  private readonly origenArchivos = new URL(environment.apiUrl).origin;
+  readonly exportando = signal(false);
 
   readonly cargando = signal(true);
   readonly error = signal('');
@@ -254,6 +262,39 @@ export class ReservasAdminComponent implements OnInit {
     return `${this.whatsapp(p)}?text=${encodeURIComponent(texto)}`;
   }
 
+    // ───────────── Exportar credenciales (solo pagadas) ─────────────
+
+  async exportarCredenciales(): Promise<void> {
+    if (this.pagadas() === 0) {
+      this.error.set('No hay reservas pagadas para exportar.');
+      return;
+    }
+    const carpeta = prompt('Carpeta de tu PC donde dejarás las fotos (ej: D:/yuca/fotos/)', 'D:/yuca/fotos/');
+    if (!carpeta) return;
+
+    this.exportando.set(true);
+    this.error.set('');
+    this.mensaje.set('');
+    try {
+      // El endpoint de reservas no trae la foto: se cruza con los perfiles por id
+      const perfiles = await firstValueFrom(this.perfilesApi.getPerfiles(''));
+      const fotos = new Map<number, string>();
+      for (const p of perfiles) if (p.fotoUrl) fotos.set(p.id, p.fotoUrl);
+
+      const faltantes = await exportarCredenciales(this.reservas(), fotos, carpeta, this.origenArchivos);
+
+      this.mensaje.set(`ZIP descargado con ${this.pagadas()} mesas pagadas.`);
+      if (faltantes.length) {
+        alert(`Faltan ${faltantes.length} foto(s). También quedaron en faltan-fotos.txt dentro del ZIP:\n\n` + faltantes.join('\n'));
+      }
+    } catch (e) {
+      this.error.set('No se pudo generar el ZIP. Revisa la consola (F12).');
+      console.error(e);
+    } finally {
+      this.exportando.set(false);
+    }
+  }
+  
   // ───────────── Ayudas de vista ─────────────
 
   etiquetaEstado(e: EstadoReserva): string {
